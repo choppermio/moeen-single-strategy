@@ -23,10 +23,48 @@ class TaskController extends Controller
 
     public function getTasksByUserId(Request $request)
     {
+        // return  $userId->count();
         $userId = $request->user_id;
+        // return  count($userId);
+
+        // Check if current user has permission to view tasks for the selected employee position
+        $currentUser = auth()->user();
+        $currentUserPositionId = current_user_position()->id; // Assuming this field exists
         
-        // Get tasks assigned to this user using the new assignment system
-        $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $userId)
+        if($userId == $currentUserPositionId) {
+            // User is trying to view their own tasks, which is allowed
+            // $userId = $currentUser->id; // Use current user's ID
+            // return 'this is me';
+        }elseif($currentUserPositionId == 4){
+            // return 'this is the boss';
+        } else {
+            // Check if the target user is in the current user's hierarchy (as a descendant)
+            $whereintheloop = $userId;
+            $foundInHierarchy = false;
+            
+            while($whereintheloop != 4 && !$foundInHierarchy){
+                // Move up the hierarchy from the target user
+                $parentRelation = \App\Models\EmployeePositionRelation::where('child_id',$whereintheloop)->first();
+                if($parentRelation) {
+                    $whereintheloop = $parentRelation->parent_id;
+                    
+                    // Check if we've reached the current user in the hierarchy
+                    if($whereintheloop == $currentUserPositionId) {
+                        $foundInHierarchy = true;
+                        break;
+                    }
+                } else {
+                    break; // No parent found, exit loop
+                }
+            }
+            
+            if(!$foundInHierarchy) {
+$tasks = [];
+
+        // If returning HTML directly
+        return view('partials.selectedUserTasks', compact('tasks'));
+            }else{
+                 $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $userId)
             ->where('type', 'task')
             ->pluck('task_id');
         
@@ -41,6 +79,11 @@ class TaskController extends Controller
 
         // If returning HTML directly
         return view('partials.selectedUserTasks', compact('tasks'));
+            }
+        }
+
+        // Get tasks assigned to this user using the new assignment system
+       
 
         // If returning JSON
         // return response()->json($tasks);
