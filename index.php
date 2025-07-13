@@ -1,5 +1,4 @@
 <?php
-die('it works');
 /**
  * Laravel - A PHP Framework For Web Artisans
  *
