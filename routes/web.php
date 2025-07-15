@@ -9,6 +9,7 @@ use App\Models\Hadafstrategy;
 use App\Models\Moasheradastrategy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TodoController;
@@ -32,6 +33,133 @@ use App\Http\Controllers\EmployeePositionRelationController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+// Test email route to check SMTP configuration
+Route::get('/test-email', function () {
+    try {
+        Mail::raw('This is a test email to verify SMTP configuration. If you receive this, the email setup is working correctly.', function ($message) {
+            $message->to('it@qimam.org.sa')
+                    ->subject('SMTP Test Email - ' . config('app.name'))
+                    ->from(config('mail.from.address'), config('mail.from.name'));
+        });
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Test email sent successfully to it@qimam.org.sa',
+            'config' => [
+                'mail_driver' => config('mail.driver'),
+                'mail_host' => config('mail.host'),
+                'mail_port' => config('mail.port'),
+                'mail_username' => config('mail.username'),
+                'mail_encryption' => config('mail.encryption'),
+                'mail_from_address' => config('mail.from.address'),
+                'mail_from_name' => config('mail.from.name'),
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to send test email',
+            'error' => $e->getMessage(),
+            'config' => [
+                'mail_driver' => config('mail.driver'),
+                'mail_host' => config('mail.host'),
+                'mail_port' => config('mail.port'),
+                'mail_username' => config('mail.username'),
+                'mail_encryption' => config('mail.encryption'),
+                'mail_from_address' => config('mail.from.address'),
+                'mail_from_name' => config('mail.from.name'),
+            ]
+        ]);
+    }
+});
+
+// Test email page - HTML interface for testing
+Route::get('/test-email-page', function () {
+    return '
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Email Test</title>
+        <meta charset="utf-8">
+        <style>
+            body { font-family: Arial, sans-serif; margin: 50px; }
+            .container { max-width: 600px; margin: 0 auto; }
+            .btn { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+            .btn:hover { background: #0056b3; }
+            .result { margin-top: 20px; padding: 15px; border-radius: 5px; }
+            .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+            .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>SMTP Test Email</h2>
+            <p>Click the button below to send a test email to it@qimam.org.sa</p>
+            <button class="btn" onclick="sendTestEmail()">Send Test Email</button>
+            <div id="result"></div>
+        </div>
+        
+        <script>
+        function sendTestEmail() {
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "<p>Sending email...</p>";
+            
+            fetch("/test-email")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="result success">
+                                <h3>Success!</h3>
+                                <p>${data.message}</p>
+                                <h4>Configuration:</h4>
+                                <ul>
+                                    <li><strong>Driver:</strong> ${data.config.mail_driver}</li>
+                                    <li><strong>Host:</strong> ${data.config.mail_host}</li>
+                                    <li><strong>Port:</strong> ${data.config.mail_port}</li>
+                                    <li><strong>Username:</strong> ${data.config.mail_username}</li>
+                                    <li><strong>Encryption:</strong> ${data.config.mail_encryption}</li>
+                                    <li><strong>From Address:</strong> ${data.config.mail_from_address}</li>
+                                    <li><strong>From Name:</strong> ${data.config.mail_from_name}</li>
+                                </ul>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="result error">
+                                <h3>Error!</h3>
+                                <p>${data.message}</p>
+                                <p><strong>Error Details:</strong> ${data.error}</p>
+                                <h4>Configuration:</h4>
+                                <ul>
+                                    <li><strong>Driver:</strong> ${data.config.mail_driver}</li>
+                                    <li><strong>Host:</strong> ${data.config.mail_host}</li>
+                                    <li><strong>Port:</strong> ${data.config.mail_port}</li>
+                                    <li><strong>Username:</strong> ${data.config.mail_username}</li>
+                                    <li><strong>Encryption:</strong> ${data.config.mail_encryption}</li>
+                                    <li><strong>From Address:</strong> ${data.config.mail_from_address}</li>
+                                    <li><strong>From Name:</strong> ${data.config.mail_from_name}</li>
+                                </ul>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>Network Error!</h3>
+                            <p>Failed to send request: ${error.message}</p>
+                        </div>
+                    `;
+                });
+        }
+        </script>
+    </body>
+    </html>
+    ';
+});
+
 
 // Display change password form
 Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change');
@@ -86,13 +214,15 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
     Route::post('/change-task', [SubtaskController::class, 'changeTask'])->name('subtask.changeTask');
     Route::post('/ticket-transitions', [TicketTransitionController::class, 'store']);
     
-    Route::get('/', function () {
-        $todos ='a';
+    // Route::get('/', function () {
+    //     $todos ='a';
         
         
         
-        return view('newstrategy', compact('todos'));
-    });
+    //     return view('employeepositionstop', compact('todos'));
+    // });
+    Route::get('/', [EmployeePositionController::class, 'top']);
+
     Route::get('newstrategy', function () {
         $todos ='a';
         

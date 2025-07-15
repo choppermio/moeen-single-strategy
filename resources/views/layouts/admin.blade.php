@@ -67,9 +67,43 @@ body {
     .color-primary{color:#2797b6 !important; font-weight: bold;}
     .sidebar-dark .sidebar-heading{text-align: right !important;}   
     .btn-primary{background-color: #2797b6 !important; border-color: #2797b6 !important;}
-    .sidebar .nav-item .nav-link[data-toggle=collapse]::after{float: left !important;}
-    .sidebar .nav-item .nav-link[data-toggle=collapse].collapsed::after{
+    .sidebar .nav-item .nav-link[data-toggle=collapse]::after{float: left !important;}    .sidebar .nav-item .nav-link[data-toggle=collapse].collapsed::after{
         content: '\f104';
+    }
+      /* Custom sidebar toggle styles - Override SB Admin styles */
+    body.sidebar-toggled .sidebar {
+        width: 0 !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+    }
+    
+    body.sidebar-toggled #content-wrapper {
+        margin-left: 0 !important;
+    }
+    
+    body.sidebar-toggled #accordionSidebar {
+        width: 0 !important;
+        overflow: hidden !important;
+        min-height: 0 !important;
+    }
+    
+    /* For mobile devices */
+    @media (max-width: 768px) {
+        body.sidebar-toggled .sidebar {
+            transform: translateX(-250px) !important;
+        }
+        
+        body.sidebar-toggled #accordionSidebar {
+            transform: translateX(-250px) !important;
+        }
+    }
+    
+    #content-wrapper {
+        transition: margin-left 0.3s ease !important;
+    }
+    
+    .sidebar, #accordionSidebar {
+        transition: width 0.3s ease, transform 0.3s ease !important;
     }
 </style>
 
@@ -476,12 +510,10 @@ body {
         <!-- End of Sidebar -->
 
         <!-- Content Wrapper -->
-        <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content-wrapper" class="d-flex flex-column" style="overflow:auto;">
               <!-- Topbar -->
-              <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-
-                <!-- Sidebar Toggle (Topbar) -->
-                <button id="wwee" class="btn btn-link d-md-none rounded-circle mr-3" style="display: block !important;">
+              <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">                <!-- Sidebar Toggle (Topbar) -->
+                <button id="wwee" class="btn btn-link rounded-circle mr-3" style="display: block !important;">
                     <i class="fa fa-bars"></i>
                 </button>
 
@@ -718,19 +750,91 @@ body {
 
     <!-- Core plugin JavaScript-->
     <script src="{{ asset('vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-
-
     <!-- Custom scripts for all pages-->
-    <script src="{{ asset('js/sb-admin-2.min.js') }}"></script>
+    <!-- <script src="{{ asset('js/sb-admin-2.min.js') }}"></script> -->
 
     <!-- Page level plugins -->
     <!--<script src="{{ asset('vendor/chart.js/Chart.min.js') }}"></script>-->
 
     <!-- Page level custom scripts -->
     <!--<script src="{{ asset('js/demo/chart-area-demo.js') }}"></script>-->
-    <!--<script src="{{ asset('js/demo/chart-pie-demo.js') }}"></script>-->
- <!-- Custom scripts for all pages-->
-<script>!function(l){"use strict";l("#sidebarToggle, #sidebarToggleTop").on("click",function(e){l("body").toggleClass("sidebar-toggled"),l(".sidebar").toggleClass("toggled"),l(".sidebar").hasClass("toggled")&&l(".sidebar .collapse").collapse("hide")}),l(window).resize(function(){l(window).width()<768&&l(".sidebar .collapse").collapse("hide"),l(window).width()<480&&!l(".sidebar").hasClass("toggled")&&(l("body").addClass("sidebar-toggled"),l(".sidebar").addClass("toggled"),l(".sidebar .collapse").collapse("hide"))}),l("body.fixed-nav .sidebar").on("mousewheel DOMMouseScroll wheel",function(e){var o;768<l(window).width()&&(o=(o=e.originalEvent).wheelDelta||-o.detail,this.scrollTop+=30*(o<0?1:-1),e.preventDefault())}),l(document).on("scroll",function(){100<l(this).scrollTop()?l(".scroll-to-top").fadeIn():l(".scroll-to-top").fadeOut()}),l(document).on("click","a.scroll-to-top",function(e){var o=l(this);l("html, body").stop().animate({scrollTop:l(o.attr("href")).offset().top},1e3,"easeInOutExpo"),e.preventDefault()})}(jQuery);</script>
+    <!--<script src="{{ asset('js/demo/chart-pie-demo.js') }}"></script>--> <!-- Custom scripts for all pages-->
+<script>
+$(document).ready(function() {
+    console.log('Sidebar toggle script loaded');
+    
+    $('#wwee').on('click', function(e) {
+        e.preventDefault();
+        console.log('Toggle button clicked');
+        
+        var body = $('body');
+        var sidebar = $('#accordionSidebar');
+        var contentWrapper = $('#content-wrapper');
+        
+        // Toggle classes
+        body.toggleClass('sidebar-toggled');
+        sidebar.toggleClass('toggled');
+        
+        // Force styles based on state
+        if (body.hasClass('sidebar-toggled')) {
+            console.log('Hiding sidebar');
+            sidebar.css({
+                'width': '0px',
+                'overflow': 'hidden',
+                'min-height': '0px'
+            });
+            contentWrapper.css('margin-left', '0px');
+        } else {
+            console.log('Showing sidebar');
+            sidebar.css({
+                'width': '224px',
+                'overflow': 'visible',
+                'min-height': '100vh'
+            });
+            contentWrapper.css('margin-left', '224px');
+        }
+        
+        // Hide any open collapses when sidebar is toggled
+        if (sidebar.hasClass('toggled')) {
+            sidebar.find('.collapse').collapse('hide');
+        }
+        
+        console.log('Body classes:', body.attr('class'));
+        console.log('Sidebar classes:', sidebar.attr('class'));
+        console.log('Sidebar width:', sidebar.width());
+    });
+    
+    // Window resize handler
+    $(window).resize(function() {
+        if ($(window).width() < 768) {
+            $('#accordionSidebar .collapse').collapse('hide');
+        }
+        
+        if ($(window).width() < 480 && !$('#accordionSidebar').hasClass('toggled')) {
+            $('body').addClass('sidebar-toggled');
+            $('#accordionSidebar').addClass('toggled');
+            $('#accordionSidebar .collapse').collapse('hide');
+        }
+    });
+    
+    // Scroll to top functionality
+    $(document).on('scroll', function() {
+        if ($(this).scrollTop() > 100) {
+            $('.scroll-to-top').fadeIn();
+        } else {
+            $('.scroll-to-top').fadeOut();
+        }
+    });
+    
+    $(document).on('click', 'a.scroll-to-top', function(e) {
+        var target = $(this);
+        $('html, body').stop().animate({
+            scrollTop: $(target.attr('href')).offset().top
+        }, 1000, 'easeInOutExpo');
+        e.preventDefault();
+    });
+});
+</script>
  <!-- Page level plugins -->
 
  <script src="{{ asset('vendor/datatables/jquery.dataTables.min.js') }}"></script>
@@ -741,6 +845,9 @@ body {
 
  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
  <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
+
+
+
  <script>
     $(document).ready(function() {
     $('#dataTable').DataTable( {
@@ -751,20 +858,11 @@ body {
     },
 
     } );
-} );
-    </script>
-    
-    <script>
-        $(document).ready(function() {
-            $('#wwee').click(function() {
-                $('#accordionSidebar').toggleClass('toggled');
-            });
-        });
-        </script>
-        
-        <script>
+} );    </script>
+          <script>
         $(document).ready(function() {
             if (window.innerWidth <= 768) {
+                $('body').addClass('sidebar-toggled');
                 $('#accordionSidebar').addClass('toggled');
             }
         });
