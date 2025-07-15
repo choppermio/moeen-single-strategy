@@ -927,16 +927,21 @@ public function subtaskattachment(Subtask $subtask, Request $request)
     if ($employee && $employee->user) {
         $email = $employee->user->email;
 
-        // Send the email if not in local environment
-        // if (env('ENVO') !== 'local') {
-        //     Mail::raw(
-        //         'تم رفع شاهد لمهمة' . $ticket->name,
-        //         function ($message) use ($email) {
-        //             $message->to($email)
-        //                     ->subject('تم رفع شواهد تحتاج ان يتم الموافقة عليها');
-        //         }
-        //     );
-        // }
+        // Send notification email to supervisor if not in local environment
+        if (env('ENVO') !== 'local') {
+            try {
+            Mail::raw(
+                "تم رفع شاهد جديد للمهمة: {$ticket->name}\n\nيرجى مراجعة الشواهد والموافقة عليها من خلال النظام.",
+                function ($message) use ($email) {
+                $message->to($email)
+                    ->subject('إشعار: شواهد جديدة تحتاج للموافقة')
+                    ->from(config('mail.from.address'), config('mail.from.name'));
+                }
+            );
+            } catch (\Exception $e) {
+            \Log::error('Failed to send notification email: ' . $e->getMessage());
+            }
+        }
     }
 
     // Redirect to the mysubtasks route
@@ -1041,15 +1046,20 @@ public function subtaskattachment(Subtask $subtask, Request $request)
         $email = $employee->user->email;
 
         // Send the email if not in local environment
-        // if (env('ENVO') !== 'local') {
-        //     Mail::raw(
-        //         'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
-        //         function ($message) use ($email) {
-        //             $message->to($email)
-        //                     ->subject('تم تغيير حالة الشاهد للمهمة ');
-        //         }
-        //     );
-        // }
+        if (env('ENVO') !== 'local') {
+            try {
+            Mail::raw(
+                "تم رفض الشاهد المرفوع للمهمة: {$subtask->name}\n\nالسبب: {$request->input('notes')}\n\nيرجى مراجعة الملاحظات وإعادة رفع الشاهد مع التصحيحات المطلوبة.",
+                function ($message) use ($email) {
+                $message->to($email)
+                    ->subject('إشعار: تم رفض الشاهد - مطلوب إعادة المراجعة')
+                    ->from(config('mail.from.address'), config('mail.from.name'));
+                }
+            );
+            } catch (\Exception $e) {
+            \Log::error('Failed to send rejection notification email: ' . $e->getMessage());
+            }
+        }
     }
 
             
@@ -1090,21 +1100,27 @@ $ticket = Ticket::where('id', $subtask->ticket_id)->first();
 
 
         
-    // $employee = EmployeePosition::where('id', $subtask->user_id)->first();
-    // if ($employee && $employee->user) {
-    //     $email = $employee->user->email;
+    // Send notification email to user about task approval
+    $employee = EmployeePosition::where('id', $subtask->user_id)->first();
+    if ($employee && $employee->user) {
+        $email = $employee->user->email;
 
-    //     // Send the email if not in local environment
-    //     if (env('ENVO') !== 'local') {
-    //         Mail::raw(
-    //             'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
-    //             function ($message) use ($email) {
-    //                 $message->to($email)
-    //                         ->subject('تم تغيير حالة الشاهد للمهمة ');
-    //             }
-    //         );
-    //     }
-    // }
+        // Send the email if not in local environment
+        if (env('ENVO') !== 'local') {
+            try {
+                Mail::raw(
+                    "تم الموافقة على الشاهد المرفوع للمهمة: {$subtask->name}\n\nالحالة الحالية: تم إحالة المهمة للموافقة النهائية\n\nيرجى متابعة النظام لأي تحديثات أخرى.",
+                    function ($message) use ($email) {
+                        $message->to($email)
+                                ->subject('إشعار: تم الموافقة على الشاهد - في انتظار الموافقة النهائية')
+                                ->from(config('mail.from.address'), config('mail.from.name'));
+                    }
+                );
+            } catch (\Exception $e) {
+                \Log::error('Failed to send task approval notification email: ' . $e->getMessage());
+            }
+        }
+    }
 
     $employee = EmployeePosition::where('id', $subtask->user_id)->first();
 if ($employee && $employee->user) {
@@ -1112,17 +1128,17 @@ if ($employee && $employee->user) {
 
     // Add additional email
     // $additionalEmail = 'governance@qimam.org.sa';
-
-    // // Send the email if not in local environment
-    // if (env('ENVO') !== 'local') {
-    //     Mail::raw(
-    //         'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
-    //         function ($message) use ($email, $additionalEmail) {
-    //             $message->to([$email, $additionalEmail])
-    //                     ->subject('تم تغيير حالة الشاهد للمهمة ');
-    //         }
-    //     );
-    // }
+    $strategyemail = \App\Models\EmployeePosition::where('id', env('STRATEGY_CONTROL_ID'))->first();
+    $additionalEmail = \App\Models\User::where('id', $strategyemail->user_id)->first()->email;
+    if (env('ENVO') !== 'local') {
+        Mail::raw(
+            'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
+            function ($message) use ($email, $additionalEmail) {
+                $message->to([$email, $additionalEmail])
+                        ->subject('تم تغيير حالة الشاهد للمهمة ');
+            }
+        );
+    }
 }
 
 
@@ -1210,15 +1226,15 @@ if ($employee && $employee->user) {
         $email = $employee->user->email;
 
         // Send the email if not in local environment
-        // if (env('ENVO') !== 'local') {
-        //     Mail::raw(
-        //         'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
-        //         function ($message) use ($email) {
-        //             $message->to($email)
-        //                     ->subject('تم تغيير حالة الشاهد للمهمة ');
-        //         }
-        //     );
-        // }
+        if (env('ENVO') !== 'local') {
+            Mail::raw(
+                'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
+                function ($message) use ($email) {
+                    $message->to($email)
+                            ->subject('تم تغيير حالة الشاهد للمهمة ');
+                }
+            );
+        }
     }
 
     

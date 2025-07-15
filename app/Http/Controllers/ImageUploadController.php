@@ -188,18 +188,24 @@ if ($employee && $employee->user && current_user_position()->id != $to_id) {
     $email = $employee->user->email;
 
     // Send the email if not in local environment
-    // if (env('ENVO') !== 'local') {
-    //     $ticketTitle = $request->name;
-    //     $emailBody = "مرحبًا {$employee->user->name},\n\n" .
-    //                  "تم إرسال تذكرة جديدة إليك بعنوان: {$ticketTitle}.\n" .
-    //                  "يرجى الدخول إلى النظام لمراجعتها.\n\n" .
-    //                  "مع تحيات،\nفريق العمل";
+    if (env('ENVO') !== 'local') {
+        $ticketTitle = $request->name;
+        $emailBody = "عزيزي {$employee->user->name}،\n\n" .
+                     "تحية طيبة وبعد،\n\n" .
+                     "نود إعلامكم بأنه تم إرسال تذكرة جديدة إليكم تحتاج إلى مراجعتكم والعمل عليها.\n\n" .
+                     "تفاصيل التذكرة:\n" .
+                     "العنوان: {$ticketTitle}\n" .
+                     "تاريخ الإرسال: " . date('Y-m-d H:i:s') . "\n\n" .
+                     "يرجى الدخول إلى النظام لمراجعة التذكرة والعمل عليها في أقرب وقت ممكن.\n\n" .
+                     "في حال وجود أي استفسارات، يرجى التواصل معنا.\n\n" .
+                     "مع أطيب التحيات،\n" .
+                     "فريق إدارة النظام";
 
-    //     Mail::raw($emailBody, function ($message) use ($email) {
-    //         $message->to($email)
-    //                 ->subject('إشعار: تذكرة جديدة موجهة إليك');
-    //     });
-    // }
+        Mail::raw($emailBody, function ($message) use ($email) {
+            $message->to($email)
+                    ->subject('إشعار رسمي: تذكرة جديدة تتطلب مراجعتكم');
+        });
+    }
 }
 
 

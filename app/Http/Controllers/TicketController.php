@@ -392,18 +392,27 @@ try{
 
         // Check if the employee exists and has an associated user
         if ($employee && $employee->user && current_user_position()->id != $request->user_id) {
-            // $email = $employee->user->email;
+            $email = $employee->user->email;
     
-            // // Send the email if not in local environment
-            // if (env('ENVO') !== 'local') {
-            //     Mail::raw(
-            //         'تم اسناد تذكرة اليك بعنوان : ' . $request->name,
-            //         function ($message) use ($email) {
-            //             $message->to($email)
-            //                     ->subject('تم ارسال تذكرة جديدة لك');
-            //         }
-            //     );
-            // }
+            // Send the email if not in local environment
+            if (env('ENVO') !== 'local') {
+                Mail::raw(
+                    "عزيزي {$employee->user->name},\n\n" .
+                    "تم إسناد تذكرة عمل جديدة إليك من نظام إدارة التذاكر.\n\n" .
+                    "تفاصيل التذكرة:\n" .
+                    "العنوان: {$request->name}\n" .
+                    "المرسل: " . current_user_position()->name . "\n" .
+                    "التاريخ: " . date('Y-m-d H:i:s') . "\n\n" .
+                    "يرجى تسجيل الدخول إلى النظام لمراجعة التذكرة والعمل عليها.\n\n" .
+                    "شكراً لكم\n" .
+                    "فريق نظام إدارة التذاكر",
+                    function ($message) use ($email) {
+                        $message->to($email)
+                                ->subject('تذكرة عمل جديدة - نظام إدارة التذاكر')
+                                ->from(config('mail.from.address'), config('mail.from.name'));
+                    }
+                );
+            }
         }
         calculatePercentages();
 
