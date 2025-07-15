@@ -15,13 +15,16 @@ class EmployeePositionController extends Controller
 {
     //
     public function team($id){
+
         //i want you to check if the use in env is strategy or not if it is strategy you return the team of the employee position with id $id
-        if (env('APP_ENV') == 'STRATEGY_CONTROL_ID') {
+        if (env('STRATEGY_CONTROL_ID') == current_user_position()->id) {
+            // dd('You are in strategy control mode');
             $employees = \App\Models\EmployeePosition::all();
         } else {
             $employees = \App\Models\EmployeePositionRelation::where('parent_id',$id)->get()->pluck('child_id');
             $employees = \App\Models\EmployeePosition::whereIn('id',$employees)->get();
         }
+        // dd($employees);
         // dd($employees);
         return View('/employee_positions/team', [
             'employeepositions' =>$employees,
