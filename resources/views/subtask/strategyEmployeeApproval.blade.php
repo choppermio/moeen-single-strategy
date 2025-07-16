@@ -150,13 +150,14 @@ $user_id  = auth()->user()->id;
                         <tr class="aa{{ $subtask->id }}">
                             <td>{{ $subtask->ticket_id }}</td>
                             <td>{{ $subtask->name }}
-                                                <td>{{ \App\Models\EmployeePosition::where('id', $subtask->user_id)->first()->name }}</td>
                 
                        <div>     <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
                             <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>
                         </div>
                         
                         </td>
+                                                                        <td>{{ \App\Models\EmployeePosition::where('id', $subtask->user_id)->first()->name }}</td>
+
                             <td>
                                 @php
                                     $note =  \App\Models\Ticket::where('id',$subtask->ticket_id)->first()->note;
@@ -351,15 +352,10 @@ $user_id  = auth()->user()->id;
                                             <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true" style="display: none;"></span>
                                         </button>
                                     </form>
-                                    <form method="post" action="{{ route('subtask.statusstrategy') }}" class="d-inline">
-                                        @csrf
-                                        <input type="hidden" name="taskid" value="{{ $subtask->id }}"/>
-                                        <input type="hidden" name="status" value="rejected"/>
-                                        <button type="submit" class="btn btn-danger btn-sm">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                        <textarea name="notes" class="form-control" placeholder="سبب الرفض" required></textarea>
-                                    </form>
+                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#rejectModal" 
+                                            onclick="setRejectTaskId({{ $subtask->id }}, '{{ $subtask->name }}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 @else
                                     <form method="post" action="{{ route('subtask.attachment') }}" enctype="multipart/form-data">
                                         @csrf
@@ -542,6 +538,42 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
 
 
 
+<!-- Modal for rejection -->
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form method="post" action="{{ route('subtask.statusstrategy') }}" id="rejectForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">رفض المهمة</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @csrf
+                    <input type="hidden" name="taskid" id="rejectTaskId"/>
+                    <input type="hidden" name="status" value="rejected"/>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">المهمة: <span id="rejectTaskName"></span></h6>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rejectNotes">سبب الرفض <span class="text-danger">*</span></label>
+                        <textarea name="notes" id="rejectNotes" class="form-control" rows="4" placeholder="يرجى كتابة سبب الرفض..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times"></i> رفض المهمة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Modal for changing satus -->
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -583,7 +615,6 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 
 
-
 <script>
 $(document).ready(function() {
     $('.approvedform').on('submit', function(e) {
@@ -606,7 +637,39 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Handle rejection form submission
+    $('#rejectForm').on('submit', function(e) {
+        alert('dfdaf');
+        e.preventDefault();
+        
+        var taskid = $('#rejectTaskId').val();
+        var formData = $(this).serialize();
+        
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                // Hide the tr with class aa+taskid
+                $('.aa' + taskid).fadeOut();
+                // Hide the modal
+                $('#rejectModal').modal('hide');
+                // Clear the form
+                $('#rejectNotes').val('');
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', status, error);
+            }
+        });
+    });
 });
+
+// Function to set task ID and name for rejection
+function setRejectTaskId(taskId, taskName) {
+    $('#rejectTaskId').val(taskId);
+    $('#rejectTaskName').text(taskName);
+}
 </script>
 <script>
     $(document).ready(function() {

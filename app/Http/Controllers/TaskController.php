@@ -24,18 +24,54 @@ class TaskController extends Controller
     public function getTasksByUserId(Request $request)
     {
         // return  $userId->count();
-        $userId = $request->user_id;
+        $userId = $request->user_id[0];
+        // return $userId;
         // return  count($userId);
 
         // Check if current user has permission to view tasks for the selected employee position
         $currentUser = auth()->user();
         $currentUserPositionId = current_user_position()->id; // Assuming this field exists
-        
+// return $currentUserPositionId . '   '. $userId . '   ';
         if($userId == $currentUserPositionId) {
+
+               $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $userId)
+            ->where('type', 'task')
+            ->pluck('task_id');
+
+            
+            // Also get tasks that are directly assigned (for backward compatibility)
+            $directlyAssignedTasks = Task::where('user_id', $userId)->pluck('id');
+            // return $directlyAssignedTasks;
+            
+            // Merge both collections and get unique task IDs
+            $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
+            
+            // Get the actual task objects
+            $tasks = Task::whereIn('id', $allTaskIds)->get();
+            // return $tasks;
+
+        // If returning HTML directly
+        return view('partials.selectedUserTasks', compact('tasks'));
             // User is trying to view their own tasks, which is allowed
             // $userId = $currentUser->id; // Use current user's ID
             // return 'this is me';
         }elseif($currentUserPositionId == 4){
+               $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $userId)
+            ->where('type', 'task')
+            ->pluck('task_id');
+            
+            // Also get tasks that are directly assigned (for backward compatibility)
+            $directlyAssignedTasks = Task::where('user_id', $userId)->pluck('id');
+            
+            // Merge both collections and get unique task IDs
+            $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
+            
+            // Get the actual task objects
+            $tasks = Task::whereIn('id', $allTaskIds)->get();
+            // return $tasks;
+
+        // If returning HTML directly
+        return view('partials.selectedUserTasks', compact('tasks'));
             // return 'this is the boss';
         } else {
             // Check if the target user is in the current user's hierarchy (as a descendant)
@@ -58,30 +94,32 @@ class TaskController extends Controller
                 }
             }
             
-            if(!$foundInHierarchy) {
-$tasks = [];
+        if(!$foundInHierarchy) {
+                $tasks = [];
 
         // If returning HTML directly
-        return view('partials.selectedUserTasks', compact('tasks'));
-            }else{
+                return view('partials.selectedUserTasks', compact('tasks'));
+        }else{
                  $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $userId)
             ->where('type', 'task')
             ->pluck('task_id');
-        
-        // Also get tasks that are directly assigned (for backward compatibility)
-        $directlyAssignedTasks = Task::where('user_id', $userId)->pluck('id');
-        
-        // Merge both collections and get unique task IDs
-        $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
-        
-        // Get the actual task objects
-        $tasks = Task::whereIn('id', $allTaskIds)->get();
+            
+            // Also get tasks that are directly assigned (for backward compatibility)
+            $directlyAssignedTasks = Task::where('user_id', $userId)->pluck('id');
+            
+            // Merge both collections and get unique task IDs
+            $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
+            
+            // Get the actual task objects
+            $tasks = Task::whereIn('id', $allTaskIds)->get();
+            
 
         // If returning HTML directly
         return view('partials.selectedUserTasks', compact('tasks'));
             }
         }
 
+        
         // Get tasks assigned to this user using the new assignment system
        
 

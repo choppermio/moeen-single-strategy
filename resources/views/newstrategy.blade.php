@@ -26,7 +26,7 @@ if(!isset($_GET['id'])){
 </style>
                     @if (in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID'))))
 <style>
-    .button{display:block !important;}
+    .button{display:inline-block !important;}
     
 </style>
 @endif

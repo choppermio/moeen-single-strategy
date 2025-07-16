@@ -216,7 +216,7 @@
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  
   
 <script>
     function myFunction() {
@@ -256,7 +256,9 @@
 
             var selectedOptions = $('#to_id option:selected');
             // alert('aaa')
-        if (selectedOptions.length > 1) {
+
+console.log(selectedOptions);
+            if (selectedOptions.length > 1) {
 
             $('#task_id').val(0);
             $('#task_id').prop('disabled', true);
@@ -264,7 +266,7 @@
             
 
             var userId = $(this).val(); // Get selected user ID
-            
+            console.log(userId);
     
             $.ajax({
                 url: '{{ env("APP_URL", "") }}get-tasks', // Laravel route
