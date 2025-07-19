@@ -149,7 +149,9 @@
                         @foreach ($approved_ticket->images as $image)
                         <a href="
                         @php
-                        if ($_SERVER['HTTP_HOST'] == 'strategy.moeen-sa.com') {
+                                            $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
+
+                        if ($_SERVER['HTTP_HOST'] == $baseUrl) {
                             $newFilePath = str_replace("public", "/public/storage", $image->filepath);
                         } else {
                             $newFilePath = str_replace("public", "/storage", $image->filepath);
@@ -341,7 +343,7 @@
                             @foreach ($needapproval_ticket->images as $image)
                             <a href="
                             @php
-                            if ($_SERVER['HTTP_HOST'] == 'strategy.moeen-sa.com') {
+                            if ($_SERVER['HTTP_HOST'] == $baseUrl) {
                                 $newFilePath = str_replace("public", "/public/storage", $image->filepath);
                             } else {
                                 $newFilePath = str_replace("public", "/storage", $image->filepath);
@@ -561,7 +563,7 @@ $(document).ready(function(){
         var userId = $(this).val();
         
         $.ajax({
-            url: '{{env('APP_URL')=='strategy.moeen-sa.com' ? 'strategy.moeen-sa.com/public' :env('APP_URL') }}api/tasks/dropdown/' + userId,
+            url: '{{env('APP_URL')==$baseUrl ? $baseUrl.'/public' :env('APP_URL') }}api/tasks/dropdown/' + userId,
             type: 'GET',
             success: function(response) {
                 $('.taskpicker').html(response);

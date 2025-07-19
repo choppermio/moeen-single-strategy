@@ -114,7 +114,9 @@
                     @foreach ($ticket->images as $image)
                     <a href="
                     @php
-                    if ($_SERVER['HTTP_HOST'] == 'strategy.moeen-sa.com') {
+                    $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
+
+                    if ($_SERVER['HTTP_HOST'] == $baseUrl) {
                         $newFilePath = str_replace("public", "/public/storage", $image->filepath);
                     } else {
                         $newFilePath = str_replace("public", "/storage", $image->filepath);
