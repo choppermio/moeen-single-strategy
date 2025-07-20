@@ -563,7 +563,7 @@ $(document).ready(function(){
         var userId = $(this).val();
         
         $.ajax({
-            url: '{{env('APP_URL')==$baseUrl ? $baseUrl.'/public' :env('APP_URL') }}api/tasks/dropdown/' + userId,
+            url: '{{ config('app.url') == $baseUrl ? $baseUrl.'/public' : config('app.url') }}api/tasks/dropdown/' + userId,
             type: 'GET',
             success: function(response) {
                 $('.taskpicker').html(response);
