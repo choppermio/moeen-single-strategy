@@ -410,7 +410,7 @@ body {
 
         // dd($subtasksApprovalCount);
                     @endphp
-                    <span class="badge bg-red badgered" >{{ $subtasksApprovalCount+ $subtasksNewCount }}</span>
+                    <span class="badge bg-red badgered" id="tasks-total-badge">{{ $subtasksApprovalCount+ $subtasksNewCount }}</span>
                 </a>
                 <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
                     data-parent="#accordionSidebar">
@@ -418,8 +418,8 @@ body {
                         <h6 class="collapse-header"></h6>
                         <a class="collapse-item"  href="{{url('/settomyteam')}}" >إسناد لفريقي</a>
                         <a class="collapse-item"  href="{{route('subtask.assignmentStats')}}" >إحصائيات الإسناد</a>
-                        <a class="collapse-item"  href="{{url('/subtaskapproval')}}" >الموافقة على المهام <span class="badge bg-red badgered" >{{ $subtasksApprovalCount }}</span></a>
-                        <a class="collapse-item"  href="{{url('/mysubtasks')}}" >مهامي <span class="badge bg-red badgered" >{{ $subtasksNewCount }}</span></a>
+                        <a class="collapse-item"  href="{{url('/subtaskapproval')}}" >الموافقة على المهام <span class="badge bg-red badgered" id="approval-tasks-badge">{{ $subtasksApprovalCount }}</span></a>
+                        <a class="collapse-item"  href="{{url('/mysubtasks')}}" >مهامي <span class="badge bg-red badgered" id="my-tasks-badge">{{ $subtasksNewCount }}</span></a>
                   
                     </div>
                 </div>
@@ -431,7 +431,7 @@ body {
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTickets"
                     aria-expanded="true" aria-controls="collapseTickets">
                     <i class="fas fa-fw fa-wrench"></i>
-                    <span>التذاكر <span class="badge bg-red badgered" >{{ $approved_tickets_count+$needapproval_tickets_count}}</span></span>
+                    <span>التذاكر <span class="badge bg-red badgered" id="tickets-total-badge">{{ $approved_tickets_count+$needapproval_tickets_count}}</span></span>
                 </a>
                 <div id="collapseTickets" class="collapse" aria-labelledby="headingTickets"
                     data-parent="#accordionSidebar">
@@ -867,6 +867,161 @@ $(document).ready(function() {
             }
         });
         </script>
+
+        <!-- Auto-update sidebar notification badges -->
+        <script>
+        $(document).ready(function() {
+            // Store previous values for comparison
+            let previousValues = {
+                total_subtasks_count: parseInt($('#tasks-total-badge').text()) || 0,
+                subtasks_approval_count: parseInt($('#approval-tasks-badge').text()) || 0,
+                subtasks_new_count: parseInt($('#my-tasks-badge').text()) || 0,
+                tickets_count: parseInt($('#tickets-total-badge').text()) || 0
+            };
+            
+            console.log('Initial badge values:', previousValues);
+            
+            // Function to play notification sound
+            function playNotificationSound() {
+                try {
+                    // Create and play notification sound using Web Audio API
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // Create a pleasant notification sound (two-tone)
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+                    
+                    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
+                    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (error) {
+                    console.log('Audio not supported or blocked:', error);
+                }
+            }
+            
+            // Function to animate badge when number increases
+            function animateBadgeIncrease(badgeElement) {
+                // Change background to black temporarily
+                badgeElement.css({
+                    'background-color': 'black',
+                    'transform': 'scale(1.2)',
+                    'transition': 'all 0.3s ease'
+                });
+                
+                // Restore original background after 2 seconds
+                setTimeout(function() {
+                    badgeElement.css({
+                        'background-color': 'red',
+                        'transform': 'scale(1)',
+                        'transition': 'all 0.3s ease'
+                    });
+                }, 2000);
+            }
+            
+            // Function to update badge visibility
+            function updateBadgeVisibility(badgeElement, count) {
+                if (count == 0) {
+                    badgeElement.hide();
+                } else {
+                    badgeElement.show();
+                }
+            }
+            
+            // Function to update badge numbers
+            function updateSidebarNotifications() {
+                $.ajax({
+                    url: '{{ route("stats.sidebar") }}',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log('API Response:', data);
+                        let soundPlayed = false;
+                        
+                        // Check and update tasks total badge
+                        if (data.total_subtasks_count > previousValues.total_subtasks_count) {
+                            console.log('Tasks total increased from', previousValues.total_subtasks_count, 'to', data.total_subtasks_count);
+                            if (!soundPlayed) {
+                                playNotificationSound();
+                                soundPlayed = true;
+                            }
+                            animateBadgeIncrease($('#tasks-total-badge'));
+                        }
+                        $('#tasks-total-badge').text(data.total_subtasks_count);
+                        updateBadgeVisibility($('#tasks-total-badge'), data.total_subtasks_count);
+                        previousValues.total_subtasks_count = data.total_subtasks_count;
+                        
+                        // Check and update approval tasks badge
+                        if (data.subtasks_approval_count > previousValues.subtasks_approval_count) {
+                            console.log('Approval tasks increased from', previousValues.subtasks_approval_count, 'to', data.subtasks_approval_count);
+                            if (!soundPlayed) {
+                                playNotificationSound();
+                                soundPlayed = true;
+                            }
+                            animateBadgeIncrease($('#approval-tasks-badge'));
+                        }
+                        $('#approval-tasks-badge').text(data.subtasks_approval_count);
+                        updateBadgeVisibility($('#approval-tasks-badge'), data.subtasks_approval_count);
+                        previousValues.subtasks_approval_count = data.subtasks_approval_count;
+                        
+                        // Check and update my tasks badge
+                        if (data.subtasks_new_count > previousValues.subtasks_new_count) {
+                            console.log('My tasks increased from', previousValues.subtasks_new_count, 'to', data.subtasks_new_count);
+                            if (!soundPlayed) {
+                                playNotificationSound();
+                                soundPlayed = true;
+                            }
+                            animateBadgeIncrease($('#my-tasks-badge'));
+                        }
+                        $('#my-tasks-badge').text(data.subtasks_new_count);
+                        updateBadgeVisibility($('#my-tasks-badge'), data.subtasks_new_count);
+                        previousValues.subtasks_new_count = data.subtasks_new_count;
+                        
+                        // Check and update tickets badge
+                        if (data.tickets_count > previousValues.tickets_count) {
+                            console.log('Tickets increased from', previousValues.tickets_count, 'to', data.tickets_count);
+                            if (!soundPlayed) {
+                                playNotificationSound();
+                                soundPlayed = true;
+                            }
+                            animateBadgeIncrease($('#tickets-total-badge'));
+                        }
+                        $('#tickets-total-badge').text(data.tickets_count);
+                        updateBadgeVisibility($('#tickets-total-badge'), data.tickets_count);
+                        previousValues.tickets_count = data.tickets_count;
+                        
+                        console.log('Updated badge values:', {
+                            tasks_total: data.total_subtasks_count,
+                            approval_tasks: data.subtasks_approval_count, 
+                            my_tasks: data.subtasks_new_count,
+                            tickets: data.tickets_count
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to update sidebar notifications:', error);
+                        console.error('Response:', xhr.responseText);
+                    }
+                });
+            }
+            
+            // Don't update immediately on page load to avoid hiding badges
+            // Wait 3 seconds before first update
+            setTimeout(function() {
+                updateSidebarNotifications();
+                // Then update every 3 seconds
+                setInterval(updateSidebarNotifications, 3000);
+            }, 3000);
+        });
+        </script>
+
         <!-- Bootstrap JS (مطلوب لـ dropdowns) -->
 
 <!-- Bootstrap Select JS (بعد jQuery و Bootstrap) -->

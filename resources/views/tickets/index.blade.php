@@ -1,9 +1,7 @@
 @extends('layouts.admin')
 {{-- @dd($needapproval_tickets) --}}
 
-@php
-$baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
-@endphp
+
 <style>
 
     .badge{color:white!important;}
@@ -18,7 +16,8 @@ $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
 
 @php
-           
+         $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
+  
            $current_user  = auth()->user()->id;
            $employee_position = \App\Models\EmployeePosition::where('user_id',$current_user)->first();
         // dd($employee_position);
@@ -153,14 +152,11 @@ $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
                         @foreach ($approved_ticket->images as $image)
                         <a href="
                         @php
-                        if ($_SERVER['HTTP_HOST'] == 'strategy.moeen-sa.com') {
-                                                   $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
+                   
+                           // $newFilePath = str_replace("public", "/public/storage", $image->filepath);
 
-                        if ($_SERVER['HTTP_HOST'] == $baseUrl) {
-                            $newFilePath = str_replace("public", "/public/storage", $image->filepath);
-                        } else {
-                            $newFilePath = str_replace("public", "/storage", $image->filepath);
-                        }
+                            $newFilePath = $baseUrl."/storage/".$image->filepath;
+
                         echo $newFilePath;
                         @endphp
                         " target="_blank" >{{ $image->filename }}</a><hr />
@@ -564,16 +560,21 @@ var url = baseUrl + '/' + ticketId;
 $(document).ready(function(){
 
         // $('[data-toggle="tooltip"]').tooltip();
-    $('.user-pick').on('change', function() {
-        var userId = $(this).val();
-        
-        $.ajax({
-            url: '{{env('APP_URL')==$baseUrl ? $baseUrl.'/public' :env('APP_URL') }}api/tasks/dropdown/' + userId,
-ion>')
-//             });
-//         });
-//     }
-// });
+$('.user-pick').on('change', function() {
+    var userId = $(this).val();
+    
+    $.ajax({
+        url: '{{ env("APP_URL") }}api/tasks/dropdown/' + userId,
+        type: 'GET',
+        success: function(response) {
+            // Handle the response here
+            console.log(response);
+        },
+        error: function() {
+            alert('Error loading tasks');
+        }
+    });
+});
 
 function strip(html){
    let doc= new DOMParser().parseFromString(html, 'text/html');
@@ -585,23 +586,11 @@ function strip(html){
 
 function applydatatable(){
     var table = $('#sent_table').DataTable({
-        order: [],
-
-    });    
-    //            url: '{{ config('app.url') == $baseUrl ? $baseUrl.'/public' : config('app.url') }}api/tasks/dropdown/' + userId,
-            type:{ 'GET',
-
-            
-        
-        var title = $(this).text();
-        var title = title.replace(/<[^>]*>?/gm, '');
-        console.log(title);
-        // $(this).append('<br><select><option value="">Select '+title+'</option></select>');
-    }
+        order: []
     });
     
     // Populate the select options and add event listener for filtering
-    countt = 0;
+    var countt = 0;
 
     table.columns().every(function() {
         var column = this;
@@ -609,24 +598,22 @@ function applydatatable(){
         countt++;
 
         if(countt == 7){
-
             var uniqueValues = new Set();
 
-column.data().unique().sort().each(function(d, j) {
-    // dd = d;
-    // var text = d.replace(/<[^>]*>?/gm, '');
-    // if (!uniqueValues.has(text)) {
-    //     uniqueValues.add(text);
-    //     select.html('<option value="'+dd+'">'+dd+'</option>');
-    // }
-});
-
-
-    }else{
-        // column.data().unique().sort().each(function(d, j) {
-        //     select.html('<option value="'+d+'">'+d+'</option>')
-        // });
-    }
+            column.data().unique().sort().each(function(d, j) {
+                // dd = d;
+                // var text = d.replace(/<[^>]*>?/gm, '');
+                // if (!uniqueValues.has(text)) {
+                //     uniqueValues.add(text);
+                //     select.html('<option value="'+dd+'">'+dd+'</option>');
+                // }
+            });
+        }else{
+            // column.data().unique().sort().each(function(d, j) {
+            //     select.html('<option value="'+d+'">'+d+'</option>')
+            // });
+        }
+        
         select.on('change', function() {
             var val = $.fn.dataTable.util.escapeRegex($(this).val());
             column.search(val ? '^'+val+'$' : '', true, false).draw();
@@ -641,51 +628,41 @@ $.ajax({
     success: function(response) {
         $('.sent_data').html(response);
         applydatatable();
-
-
     },
     error: function() {
         alert('Oops, something went wrong.');
     }
 });
-
-
 
 $('#filterdate').on('click', function() {
     var minDate = $('#min-date').val();
     var maxDate = $('#max-date').val();
 
-$.ajax({
-    //add to url the minDate and maxDate
-    url: '{{ route('tickets.ticketshow') }}?minDate=' + minDate + '&maxDate=' + maxDate + '&status=' + $('.status-fiter').val(),
-    // url: '{{ route('tickets.ticketshow') }}',
-    type: 'GET',
-    success: function(response) {
-        //reset datatable
-        $('#sent_table').DataTable().destroy();
+    $.ajax({
+        //add to url the minDate and maxDate
+        url: '{{ route('tickets.ticketshow') }}?minDate=' + minDate + '&maxDate=' + maxDate + '&status=' + $('.status-fiter').val(),
+        // url: '{{ route('tickets.ticketshow') }}',
+        type: 'GET',
+        success: function(response) {
+            //reset datatable
+            $('#sent_table').DataTable().destroy();
 
-        $('.sent_data').html(response);
-        applydatatable();
-
-
-    },
-    error: function() {
-        alert('Oops, something went wrong.');
-    }
-});
+            $('.sent_data').html(response);
+            applydatatable();
+        },
+        error: function() {
+            alert('Oops, something went wrong.');
+        }
+    });
 });
 
-
-
-
-
-        $('.setuser').click(function(){
-            var id = $(this).attr('idd');
-            $('input[name="ticket_id"]').val(id);
-            var name = $(this).attr('namee');
-            $('input[name="name"]').val(name);
-           // $('#exampleModalCenter').modal('show');
-        });
+$('.setuser').click(function(){
+    var id = $(this).attr('idd');
+    $('input[name="ticket_id"]').val(id);
+    var name = $(this).attr('namee');
+    $('input[name="name"]').val(name);
+   // $('#exampleModalCenter').modal('show');
+});
     });
     </script>
 <script>

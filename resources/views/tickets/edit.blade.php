@@ -282,6 +282,7 @@
                         console.log('Files uploaded successfully:', response);
                     },
                     error: function(xhr, status, error) {
+                        myFunction()
                         console.error('Upload failed:', error);
                     }
                 });

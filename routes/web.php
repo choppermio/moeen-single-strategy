@@ -160,6 +160,8 @@ Route::get('/test-email-page', function () {
     ';
 });
 
+// Stats API for auto-updating sidebar badges
+Route::get('/api/stats/sidebar-notifications', [App\Http\Controllers\StatsController::class, 'sidepanelnotificationnumber'])->name('stats.sidebar');
 
 // Display change password form
 Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change');
