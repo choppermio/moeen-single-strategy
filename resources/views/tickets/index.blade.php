@@ -1,5 +1,9 @@
 @extends('layouts.admin')
 {{-- @dd($needapproval_tickets) --}}
+
+@php
+$baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
+@endphp
 <style>
 
     .badge{color:white!important;}
@@ -62,7 +66,7 @@
     <x-page-heading :title="'التذاكر'"  />
     @php
     $current_user_id = current_user_position()->id;
-         $approved_tickets_count= \App\Models\Ticket::where('status','approved')->where('to_id',$current_user_id)->where(function($query) {
+         $approved_tickets_count= \App\Models\Ticket::where('sta         $approved_tickets_count= \App\Models\Ticket::where('status','approved')->where('to_id',$current_user_id)->where(function($query) {
              $query->where('task_id', '=', 0)->orWhereNull('task_id');
          })->orderBy('id', 'desc')->count();
          $needapproval_tickets_count= \App\Models\Ticket::where('status','pending')->where('to_id',$current_user_id)->orderBy('id', 'desc')->count();
@@ -149,7 +153,8 @@
                         @foreach ($approved_ticket->images as $image)
                         <a href="
                         @php
-                                            $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
+                        if ($_SERVER['HTTP_HOST'] == 'strategy.moeen-sa.com') {
+                                                   $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
 
                         if ($_SERVER['HTTP_HOST'] == $baseUrl) {
                             $newFilePath = str_replace("public", "/public/storage", $image->filepath);
@@ -563,56 +568,15 @@ $(document).ready(function(){
         var userId = $(this).val();
         
         $.ajax({
-            url: '{{ config('app.url') == $baseUrl ? $baseUrl.'/public' : config('app.url') }}api/tasks/dropdown/' + userId,
-            type: 'GET',
-            success: function(response) {
-                $('.taskpicker').html(response);
-            },
-            error: function() {
-                alert('Oops, something went wrong.');
-            }
-        });
-    });
-});
-</script>
-<script></script>
-<script>
-    $(document).ready(function(){
-//         let table = new DataTable('#sent_table', {
-//     language: {
-//         url: 'https://cdn.datatables.net/plug-ins/2.0.7/i18n/ar.json',
-//     },
-//     // Export to Excel
-//     dom: 'Bfrtip',
-//     buttons: [
-//         'copy', 'csv', 'excel', 'pdf', 'print'
-//     ],
-//     order: [], // Disable initial ordering
-//     initComplete: function() {
-//         var api = this.api();
-//         api.columns().every(function() {
-//             var column = this;
-//             var select = $('<select><option value=""></option></select>')
-//                 .appendTo($(column.footer()).empty())
-//                 .on('change', function() {
-//                     var val = $.fn.dataTable.util.escapeRegex(
-//                         $(this).val()
-//                     );
-//                     column
-//                         .search(val ? '^' + val + '$' : '', true, false)
-//                         .draw();
-//                 });
-
-//             // Manually get data from the table rows
-//             api.cells(null, column.index()).render('display').sort().unique().each(function(d, j) {
-//                 select.append('<option value="' + d + '">' + d + '</option>')
+            url: '{{env('APP_URL')==$baseUrl ? $baseUrl.'/public' :env('APP_URL') }}api/tasks/dropdown/' + userId,
+ion>')
 //             });
 //         });
 //     }
 // });
 
 function strip(html){
-   let doc = new DOMParser().parseFromString(html, 'text/html');
+   let doc= new DOMParser().parseFromString(html, 'text/html');
    return doc.body.textContent || "";
 }
 
@@ -624,11 +588,9 @@ function applydatatable(){
         order: [],
 
     });    
-    // Add a select filter for each column
-    countt = 0;
-    $('#sent_table thead th').each(function() {
-        countt++;
-        if(countt == 7){
+    //            url: '{{ config('app.url') == $baseUrl ? $baseUrl.'/public' : config('app.url') }}api/tasks/dropdown/' + userId,
+            type:{ 'GET',
+
             
         
         var title = $(this).text();
