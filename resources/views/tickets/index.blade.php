@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 {{-- @dd($needapproval_tickets) --}}
 
-@php
+<?php
 $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
-@endphp
+?>
 <style>
 
     .badge{color:white!important;}
