@@ -63,10 +63,9 @@ $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
 
 @endphp
 <div class="container-fluid mt-5">
-    <x-page-heading :title="'التذاكر'"  />
-    @php
+    <x-page-heading :title="'التذاكر'"  />    @php
     $current_user_id = current_user_position()->id;
-         $approved_tickets_count= \App\Models\Ticket::where('sta         $approved_tickets_count= \App\Models\Ticket::where('status','approved')->where('to_id',$current_user_id)->where(function($query) {
+         $approved_tickets_count= \App\Models\Ticket::where('status','approved')->where('to_id',$current_user_id)->where(function($query) {
              $query->where('task_id', '=', 0)->orWhereNull('task_id');
          })->orderBy('id', 'desc')->count();
          $needapproval_tickets_count= \App\Models\Ticket::where('status','pending')->where('to_id',$current_user_id)->orderBy('id', 'desc')->count();
