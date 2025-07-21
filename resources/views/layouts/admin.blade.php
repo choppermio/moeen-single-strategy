@@ -330,6 +330,12 @@ body {
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>المناصب الوظيفية</span></a>
             </li>
+            
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ route('stats.dashboard') }}">
+                    <i class="fas fa-fw fa-chart-pie"></i>
+                    <span>لوحة الإحصائيات</span></a>
+            </li>
             @endif
             <li class="nav-item ">
                 <a class="nav-link" href="{{ url('/subtask-analyst?type=month&id='.date("m").'&department_id='.current_user_position()->id) }}&solo=true">

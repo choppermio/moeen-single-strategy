@@ -164,8 +164,10 @@ Route::get('/test-email-page', function () {
 // Stats API for auto-updating sidebar badges
 Route::get('/api/stats/sidebar-notifications', [App\Http\Controllers\StatsController::class, 'sidepanelnotificationnumber'])->name('stats.sidebar');
 
-// Stats Dashboard
-Route::get('/stats/dashboard', [App\Http\Controllers\StatsController::class, 'dashboard'])->name('stats.dashboard');
+// Stats Dashboard - Admin Only
+Route::get('/stats/dashboard', [App\Http\Controllers\StatsController::class, 'dashboard'])
+    ->name('stats.dashboard')
+    ->middleware('auth');
 
 // User Management Routes (for debugging login issues)
 Route::get('/user-management', function () {

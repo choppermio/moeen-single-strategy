@@ -14,6 +14,11 @@ class StatsController extends Controller
 {
     public function dashboard()
     {
+        // Check if user is admin
+        if (!is_admin()) {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
+        }
+
         // 1. متوسط الأهداف الاستراتيجية
         $strategicGoalsAverage = Hadafstrategy::avg('percentage') ?? 0;
 
