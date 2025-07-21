@@ -10,6 +10,7 @@ use App\Models\Moasheradastrategy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TodoController;
@@ -162,6 +163,210 @@ Route::get('/test-email-page', function () {
 
 // Stats API for auto-updating sidebar badges
 Route::get('/api/stats/sidebar-notifications', [App\Http\Controllers\StatsController::class, 'sidepanelnotificationnumber'])->name('stats.sidebar');
+
+// Stats Dashboard
+Route::get('/stats/dashboard', [App\Http\Controllers\StatsController::class, 'dashboard'])->name('stats.dashboard');
+
+// User Management Routes (for debugging login issues)
+Route::get('/user-management', function () {
+    return view('user-management');
+})->name('user.management');
+
+Route::get('/user-management/api/users', function () {
+    try {
+        $users = App\Models\User::select('id', 'name', 'email', 'position', 'level')->get();
+        return response()->json(['success' => true, 'users' => $users]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
+Route::post('/user-management/api/reset-password', function (Illuminate\Http\Request $request) {
+    try {
+        $user = App\Models\User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'المستخدم غير موجود']);
+        }
+        
+        $user->password = Hash::make($request->password);
+        $user->save();
+        
+        return response()->json(['success' => true, 'message' => 'تم إعادة تعيين كلمة المرور بنجاح']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
+Route::post('/user-management/api/create-user', function (Illuminate\Http\Request $request) {
+    try {
+        $existingUser = App\Models\User::where('email', $request->email)->first();
+        if ($existingUser) {
+            return response()->json(['success' => false, 'message' => 'البريد الإلكتروني مستخدم بالفعل']);
+        }
+        
+        $user = new App\Models\User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->position = $request->position;
+        $user->level = $request->level ?: 1;
+        $user->save();
+        
+        return response()->json(['success' => true, 'message' => 'تم إنشاء المستخدم بنجاح']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
+Route::post('/user-management/api/test-login', function (Illuminate\Http\Request $request) {
+    try {
+        $credentials = ['email' => $request->email, 'password' => $request->password];
+        
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            Auth::logout(); // Logout immediately after test
+            return response()->json([
+                'success' => true, 
+                'message' => 'تسجيل الدخول ناجح',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'position' => $user->position ?? null
+                ]
+            ]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'البيانات غير صحيحة']);
+        }
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
+// Quick fix route - Reset CEO password to known value
+Route::get('/fix-login', function() {
+    try {
+        $user = App\Models\User::where('email', 'ceo@moeen-sa.com')->first();
+        if ($user) {
+            $user->password = Hash::make('123456');
+            $user->save();
+            return "CEO password reset to: 123456<br>Email: ceo@moeen-sa.com<br>You can now login with these credentials.<br><a href='/login'>Go to Login Page</a>";
+        } else {
+            // Create admin user if CEO doesn't exist
+            $user = new App\Models\User();
+            $user->name = 'Administrator';
+            $user->email = 'admin@moeen-sa.com';
+            $user->password = Hash::make('admin123');
+            $user->position = 'admin';
+            $user->level = 1;
+            $user->save();
+            return "Admin user created:<br>Email: admin@moeen-sa.com<br>Password: admin123<br><a href='/login'>Go to Login Page</a>";
+        }
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
+});
+
+// Simple test route
+Route::get('/test-simple', function() {
+    return "✅ Routes are working! Database users: " . App\Models\User::count();
+});
+
+// Debug Login Interface
+Route::get('/debug-login', function() {
+    try {
+        $users = App\Models\User::select('id', 'name', 'email', 'password', 'position', 'level')->limit(10)->get();
+        $totalUsers = App\Models\User::count();
+        
+        return view('debug-login', compact('users', 'totalUsers'));
+    } catch (\Exception $e) {
+        return "Database Error: " . $e->getMessage();
+    }
+});
+
+Route::post('/debug-login/reset-password', function(Illuminate\Http\Request $request) {
+    try {
+        $user = App\Models\User::where('email', $request->email)->first();
+        if ($user) {
+            $user->password = Hash::make('123456');
+            $user->save();
+            return response()->json(['success' => true, 'message' => 'Password reset to 123456 for ' . $user->email]);
+        }
+        return response()->json(['success' => false, 'message' => 'User not found']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
+Route::post('/debug-login/reset-all', function() {
+    try {
+        $users = App\Models\User::all();
+        foreach ($users as $user) {
+            $user->password = Hash::make('123456');
+            $user->save();
+        }
+        return response()->json(['success' => true, 'message' => 'All passwords reset to 123456']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
+Route::post('/debug-login/test-hash', function() {
+    $hash = Hash::make('123456');
+    return response()->json(['hash' => $hash]);
+});
+
+Route::post('/debug-login/test-auth', function(Illuminate\Http\Request $request) {
+    try {
+        $credentials = ['email' => $request->email, 'password' => $request->password];
+        
+        // First check if user exists
+        $user = App\Models\User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'User not found',
+                'debug' => 'Email ' . $request->email . ' does not exist in database'
+            ]);
+        }
+        
+        // Check if password matches
+        if (Hash::check($request->password, $user->password)) {
+            // Try Laravel Auth
+            if (Auth::attempt($credentials)) {
+                $authUser = Auth::user();
+                Auth::logout(); // Logout immediately after test
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Authentication successful',
+                    'user' => [
+                        'id' => $authUser->id,
+                        'name' => $authUser->name,
+                        'email' => $authUser->email
+                    ]
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Password matches but Auth::attempt failed',
+                    'debug' => 'Hash matches manually but Laravel Auth failed'
+                ]);
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password does not match',
+                'debug' => 'Hash check failed for stored password'
+            ]);
+        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Exception: ' . $e->getMessage(),
+            'debug' => $e->getTraceAsString()
+        ]);
+    }
+});
 
 // Display change password form
 Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change');
