@@ -172,43 +172,40 @@ try{
 
             // dd(current_user_position()->id);
             
-            // return response()->json(['message' => 'Files uploaded and attached successfully']);
-        } else {
+            // return response()->json(['message' => 'Files uploaded and attached successfully']);        } else {
             // return response()->json(['message' => 'No files provided']);
         }
         
-        
+        // Check if the employee exists and has an associated user and send email notification
+        if ($employee && $employee->user && current_user_position()->id != $to_id) {
+            $email = $employee->user->email;
+            
+            // Send the email if not in local environment
+            if (env('ENVO') !== 'local') {
+                $ticketTitle = $name; // Use the current name from the loop
+                $emailBody = "عزيزي {$employee->user->name}،\n\n" .
+                             "تحية طيبة وبعد،\n\n" .
+                             "نود إعلامكم بأنه تم إرسال تذكرة جديدة إليكم تحتاج إلى مراجعتكم والعمل عليها.\n\n" .
+                             "تفاصيل التذكرة:\n" .
+                             "العنوان: {$ticketTitle}\n" .
+                             "تاريخ الإرسال: " . date('Y-m-d H:i:s') . "\n\n" .
+                             "يرجى الدخول إلى النظام لمراجعة التذكرة والعمل عليها في أقرب وقت ممكن.\n\n" .
+                             "في حال وجود أي استفسارات، يرجى التواصل معنا.\n\n" .
+                             "مع أطيب التحيات،\n" .
+                             "فريق إدارة النظام";
+
+                Mail::raw($emailBody, function ($message) use ($email) {
+                    $message->to($email)
+                            ->subject('إشعار رسمي: تذكرة جديدة تتطلب مراجعتكم');
+                });
+            }
         }
+        
+          }
         
 
     }
     
-    // Check if the employee exists and has an associated user
-if ($employee && $employee->user && current_user_position()->id != $to_id) {
-    $email = $employee->user->email;
-
-    // Send the email if not in local environment
-    if (env('ENVO') !== 'local') {
-        $ticketTitle = $request->name;
-        $emailBody = "عزيزي {$employee->user->name}،\n\n" .
-                     "تحية طيبة وبعد،\n\n" .
-                     "نود إعلامكم بأنه تم إرسال تذكرة جديدة إليكم تحتاج إلى مراجعتكم والعمل عليها.\n\n" .
-                     "تفاصيل التذكرة:\n" .
-                     "العنوان: {$ticketTitle}\n" .
-                     "تاريخ الإرسال: " . date('Y-m-d H:i:s') . "\n\n" .
-                     "يرجى الدخول إلى النظام لمراجعة التذكرة والعمل عليها في أقرب وقت ممكن.\n\n" .
-                     "في حال وجود أي استفسارات، يرجى التواصل معنا.\n\n" .
-                     "مع أطيب التحيات،\n" .
-                     "فريق إدارة النظام";
-
-        Mail::raw($emailBody, function ($message) use ($email) {
-            $message->to($email)
-                    ->subject('إشعار رسمي: تذكرة جديدة تتطلب مراجعتكم');
-        });
-    }
-}
-
-
     return true;
     
     
@@ -218,13 +215,16 @@ if ($employee && $employee->user && current_user_position()->id != $to_id) {
         // dd($request->name);
         $modelType='ticket';
      
-        
-        $ticket = Ticket::findOrFail($request->ticket_id);
+          $ticket = Ticket::findOrFail($request->ticket_id);
         //check if ticket from_id is equal to current_employee_position->id 
         if($ticket->from_id != current_user_position()->id){
             return redirect()->route('tickets.index')->with('error', 'You are not allowed to update this ticket');
         }
-        $ticket->name = $request->name;
+        
+        // Handle name as array or string
+        $ticketName = is_array($request->name) ? $request->name[0] : $request->name;
+        
+        $ticket->name = $ticketName;
         $ticket->note = $request->note;
         $ticket->due_time = $request->duetime;
         $ticket->save();
@@ -232,7 +232,7 @@ if ($employee && $employee->user && current_user_position()->id != $to_id) {
         $subtask = Subtask::where('ticket_id', $request->ticket_id)->first();
 
         if ($subtask) {
-            $subtask->name = $request->name;
+            $subtask->name = $ticketName;
             $subtask->notes = $request->note;
             $subtask->due_time = $request->duetime;
             $subtask->save();

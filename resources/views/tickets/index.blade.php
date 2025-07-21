@@ -3,17 +3,73 @@
 
 
 <style>
-
     .badge{color:white!important;}
     .modal-lg {
     max-width: 80% !important;
 }
-</style>
- <!-- DataTables CSS -->
+
+/* Animation styles for count changes */
+.count-change-animation {
+    transition: all 0.3s ease-in-out;
+    animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Tab highlighting styles */
+.tab-increase {
+    background-color: #28a745 !important;
+    color: white !important;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+.tab-decrease {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+/* Auto-update controls styling */
+.auto-update-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#toggleAutoUpdate {
+    transition: all 0.3s ease;
+}
+
+#lastUpdateTime {
+    font-family: monospace;
+}
+
+/* Update indicator animation */
+#update-indicator {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style> <!-- DataTables CSS -->
  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
  <!-- DataTables Buttons CSS -->
  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.dataTables.min.css">
  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+ <!-- Font Awesome for icons -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 @php
          $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
@@ -63,6 +119,18 @@
 @endphp
 <div class="container-fluid mt-5">
     <x-page-heading :title="'التذاكر'"  />
+    
+    <!-- Auto-update control -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div></div>
+        <div class="auto-update-controls d-none">
+            <button id="toggleAutoUpdate" class="btn btn-sm btn-outline-primary">
+                <i id="autoUpdateIcon" class="fas fa-pause"></i>
+                <span id="autoUpdateText">إيقاف التحديث التلقائي</span>
+            </button>
+            <small class="text-muted ms-2">آخر تحديث: <span id="lastUpdateTime">الآن</span></small>
+        </div>
+    </div>
     @php
     $current_user_id = current_user_position()->id;
          $approved_tickets_count = \App\Models\Ticket::where('status', 'approved')->where('to_id', $current_user_id)->where(function($query) {
@@ -108,11 +176,10 @@
         <li class="nav-item">
             <a class="nav-link" id="pending-tab" data-toggle="tab" href="#pending" role="tab"
                 aria-controls="pending" aria-selected="false">المعلق</a>
-        </li>
-        <li class="nav-item">
+        </li>        <li class="nav-item">
             <a class="nav-link" id="needapproval-tab" data-toggle="tab" href="#needapproval" role="tab"
                 aria-controls="needapproval" aria-selected="false">تحتاج إلى موافقة
-                <span class="badge bg-red badgered" >{{ $needapproval_tickets_count }} 
+                <span class="badge bg-red badgered" >{{ $needapproval_tickets_count }}</span>
             </a>
         </li>
         <li class="nav-item">
@@ -149,15 +216,12 @@
                     <td>
                         @if($approved_ticket && $approved_ticket->images)
 
-                        @foreach ($approved_ticket->images as $image)
-                        <a href="
+                        @foreach ($approved_ticket->images as $image)                        <a href="
                         @php
-                   
-                           // $newFilePath = str_replace("public", "/public/storage", $image->filepath);
-
-                            $newFilePath = $baseUrl."/storage/".$image->filepath;
-
-                        echo $newFilePath;
+                           // Remove "public/" from the filepath since storage link maps /storage to /storage/app/public
+                           $cleanPath = str_replace('public/', '', $image->filepath);
+                           $newFilePath = $baseUrl."/storage/".$cleanPath;
+                           echo $newFilePath;
                         @endphp
                         " target="_blank" >{{ $image->filename }}</a><hr />
                             
@@ -341,14 +405,11 @@
                         <td>
                             @if($needapproval_ticket && $needapproval_ticket->images)
     
-                            @foreach ($needapproval_ticket->images as $image)
-                            <a href="
+                            @foreach ($needapproval_ticket->images as $image)                            <a href="
                             @php
-                            if ($_SERVER['HTTP_HOST'] == $baseUrl) {
-                                $newFilePath = str_replace("public", "/public/storage", $image->filepath);
-                            } else {
-                                $newFilePath = str_replace("public", "/storage", $image->filepath);
-                            }
+                            // Remove "public/" from the filepath since storage link maps /storage to /storage/app/public
+                            $cleanPath = str_replace('public/', '', $image->filepath);
+                            $newFilePath = $baseUrl."/storage/".$cleanPath;
                             echo $newFilePath;
                             @endphp
                             " target="_blank" >{{ $image->filename }}</a><hr />
@@ -457,11 +518,9 @@
         
                 
                 @endphp
-                <option value="{{ $employee_position->id }}">تعيين لنفسي</option>
-              @foreach($children_employee_positions as $children_employee_position)
+                <option value="{{ $employee_position->id }}">تعيين لنفسي</option>              @foreach($children_employee_positions as $children_employee_position)
               @php
               $employee_position = \App\Models\EmployeePosition::where('id',$children_employee_position->child_id)->first();
-              echo $employee_position;
               @endphp
               <option value="{{ $employee_position->id }}">{{ $employee_position->name }}</option>
               @endforeach
@@ -517,7 +576,6 @@
     </div>
   </div>
 
-
   <!-- Scripts are loaded in admin layout - no need to reload jQuery -->
   <!-- DataTables JS - Load after jQuery from admin layout -->
    <!-- //jquery cdn -->
@@ -527,8 +585,187 @@
   <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
+  <!-- Add notification sound -->
+  <audio id="notificationSound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmAdBjiH0fPDdC0FOItBF2qXN0Lve6dJZrH9qN2U+L7gAz5k4uE2/uBT5I4/S2VG6LM6P9CZrktfKzK2NjA6b7g1p5YH5p1PFZhiP8h/dU+kR+LXvfgwYNJAAX3PTLFQOc+SV1LdVoKgJJ9RNBVsP4F5N6I5N4S1VJ+1QQ/ZSMPbS9NFMCNf7YR1qe2OqD1YlMFoTCO1D5rCTHjdGNQcdH/kQuQV5b8aeJt/dF9veFtvvTr6O77BK8vNxrK6Y9xkRz2KSC7ODbKEPdYsOJhOUzWGQjzPLVsHaUUBkUi8eGrx3sUaT3eKv6N1f8W1HpV1NKKUON0dLVCh7CxGTp3RCtmv6s7xzEF3qDN5qcCfGp+gJIHoFO2NtmYXg8dXoEEgNmBdKRy+YWfQb0VvnStqSkqaAKFq6GCGKL/hXf9xkBJmGJF2xqJ3v8a1HqNYHdz+6JLAr8qy+qoiQZeCPNy9LUQPq8hzlhNa1O9Nq4EKNP9dTj8Dt0aGZXdHE9J8MExSgXTNZN4vKV1v6S7wgJGa1nz9YZ3XQOVNmjhOv78gqfH6wWO//79KgcxPg7u1f9l7Uw7qKMQ5eXOsGYPKIpzd9J7NqN2q4Y5ORv9LfL9f" type="audio/wav">
+  </audio>
   <script>
     $(document).ready(function() {
+        // Store previous counts for comparison
+        let previousCounts = {
+            approved_tickets_count: {{ $approved_tickets_count }},
+            needapproval_tickets_count: {{ $needapproval_tickets_count }}
+        };
+
+        // Auto-update control variables
+        let autoUpdateInterval;
+        let isAutoUpdateEnabled = true;
+
+        // Function to play notification sound
+        function playNotificationSound() {
+            const audio = document.getElementById('notificationSound');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Could not play notification sound:', e));
+            }
+        }
+
+        // Function to update last update time
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-SA', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            $('#lastUpdateTime').text(timeString);
+        }// Function to highlight element with background color change
+        function highlightChange(elementSelector, newCount, oldCount) {
+            const element = $(elementSelector);
+            const badge = element.find('.badge');
+            
+            if (newCount > oldCount) {
+                // Green for increase
+                element.addClass('tab-increase');
+                badge.addClass('count-change-animation');
+                setTimeout(() => {
+                    element.removeClass('tab-increase');
+                    badge.removeClass('count-change-animation');
+                }, 3000);
+                return true; // Indicates change occurred
+            } else if (newCount < oldCount) {
+                // Yellow for decrease
+                element.addClass('tab-decrease');
+                badge.addClass('count-change-animation');
+                setTimeout(() => {
+                    element.removeClass('tab-decrease');
+                    badge.removeClass('count-change-animation');
+                }, 3000);
+                return true; // Indicates change occurred
+            }
+            return false; // No change
+        }        // Function to update ticket counts
+        function updateTicketCounts() {
+            // Add a subtle indicator that we're checking for updates
+            const indicator = $('<small class="text-muted ms-2" id="update-indicator">🔄</small>');
+            $('.nav-tabs').append(indicator);
+            
+            $.ajax({
+                url: '{{ route("stats.sidebar") }}',
+                method: 'GET',
+                success: function(response) {
+                    let changeOccurred = false;
+
+                    // Update approved tickets count
+                    if (response.approved_tickets_count !== previousCounts.approved_tickets_count) {
+                        const approvedBadge = $('#approved-tab .badge');
+                        approvedBadge.text(response.approved_tickets_count);
+                        
+                        if (highlightChange('#approved-tab', response.approved_tickets_count, previousCounts.approved_tickets_count)) {
+                            changeOccurred = true;
+                            console.log('Approved tickets changed from', previousCounts.approved_tickets_count, 'to', response.approved_tickets_count);
+                        }
+                        
+                        previousCounts.approved_tickets_count = response.approved_tickets_count;
+                    }
+
+                    // Update needapproval tickets count
+                    if (response.needapproval_tickets_count !== previousCounts.needapproval_tickets_count) {
+                        const needapprovalBadge = $('#needapproval-tab .badge');
+                        needapprovalBadge.text(response.needapproval_tickets_count);
+                        
+                        if (highlightChange('#needapproval-tab', response.needapproval_tickets_count, previousCounts.needapproval_tickets_count)) {
+                            changeOccurred = true;
+                            console.log('Need approval tickets changed from', previousCounts.needapproval_tickets_count, 'to', response.needapproval_tickets_count);
+                        }
+                        
+                        previousCounts.needapproval_tickets_count = response.needapproval_tickets_count;
+                    }
+
+                    // Play notification sound if any change occurred
+                    if (changeOccurred) {
+                        playNotificationSound();
+                        
+                        // Show a toast notification
+                        showChangeNotification('تم تحديث أعداد التذاكر!');
+                        
+                        // Also refresh the current active tab content if needed
+                        const activeTab = $('.nav-link.active').attr('id');
+                        if (activeTab === 'approved-tab' || activeTab === 'needapproval-tab') {
+                            // Optionally reload the page or refresh tab content
+                            // location.reload(); // Uncomment if you want full page reload
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching ticket stats:', error);                },
+                complete: function() {
+                    // Remove the update indicator
+                    $('#update-indicator').remove();
+                    // Update last update time
+                    updateLastUpdateTime();
+                }
+            });
+        }
+
+        // Function to show change notification
+        function showChangeNotification(message) {
+            // Create a temporary notification
+            const notification = $(`
+                <div class="alert alert-info alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    <strong>تحديث!</strong> ${message}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `);
+            
+            $('body').append(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.alert('close');
+            }, 5000);
+        }
+
+        // Function to start auto-update
+        function startAutoUpdate() {
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+            }
+            autoUpdateInterval = setInterval(updateTicketCounts, 3000);
+            isAutoUpdateEnabled = true;
+            $('#autoUpdateIcon').removeClass('fa-play').addClass('fa-pause');
+            $('#autoUpdateText').text('إيقاف التحديث التلقائي');
+            $('#toggleAutoUpdate').removeClass('btn-outline-success').addClass('btn-outline-primary');
+        }
+
+        // Function to stop auto-update
+        function stopAutoUpdate() {
+            if (autoUpdateInterval) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateInterval = null;
+            }
+            isAutoUpdateEnabled = false;
+            $('#autoUpdateIcon').removeClass('fa-pause').addClass('fa-play');
+            $('#autoUpdateText').text('تشغيل التحديث التلقائي');
+            $('#toggleAutoUpdate').removeClass('btn-outline-primary').addClass('btn-outline-success');
+        }
+
+        // Toggle auto-update on button click
+        $('#toggleAutoUpdate').click(function() {
+            if (isAutoUpdateEnabled) {
+                stopAutoUpdate();
+            } else {
+                startAutoUpdate();
+            }
+        });
+
+        // Start auto-update initially
+        startAutoUpdate();
+        updateLastUpdateTime();
+
         $(document).on('click', '.status-history', function() {
        
             // Get the ticket ID from the data attribute

@@ -112,15 +112,10 @@
                     @if($ticket && $ticket->images)
 
                     @foreach ($ticket->images as $image)
-                    <a href="
-                    @php
-                    $baseUrl = parse_url(env('APP_URL'), PHP_URL_HOST);
-
-                    if ($_SERVER['HTTP_HOST'] == $baseUrl) {
-                        $newFilePath = str_replace("public", "/public/storage", $image->filepath);
-                    } else {
-                        $newFilePath = str_replace("public", "/storage", $image->filepath);
-                    }
+                    <a href="                    @php
+                    // Remove "public/" from the filepath since storage link maps /storage to /storage/app/public
+                    $cleanPath = str_replace('public/', '', $image->filepath);
+                    $newFilePath = url('/storage/'.$cleanPath);
                     echo $newFilePath;
                     @endphp
                     " target="_blank" >{{ $image->filename }}</a><hr />
