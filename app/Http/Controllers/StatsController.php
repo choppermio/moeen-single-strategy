@@ -81,7 +81,7 @@ class StatsController extends Controller
                 'id' => $department->id,
                 'name' => $department->name,
                 'average_percentage' => round($avgPercentage, 2),
-                'employees_count' => count($childrenIds), // Count only subordinates
+                'employees_count' => count($childrenIds)+1, // Count only subordinates
                 'total_tasks' => Subtask::whereIn('user_id', $performanceIds)->count(),
                 'completed_tasks' => Subtask::whereIn('user_id', $performanceIds)->where('percentage', 100)->count()
             ];
