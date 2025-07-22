@@ -8,7 +8,7 @@
 
 @section('content')
 <!-- bootstrap cdn-->
-<div class="container pt-2">
+<div class="container-fluid pt-2">
     <h3>المناصب الوظيفية</h3>
     <hr />
     <a  href="{{url('/employeepositions/create')}}"><button class="btn btn-primary m-3">أضف جديد</button></a>
@@ -32,7 +32,8 @@
                 
             @endphp
             <tr>
-                <td>{{ $employeeposition->name ??'' }} -                 {{ $employeeposition->user->name??'' }}
+                <td>
+                    <span class="badge badge-info">{{ $employeeposition->name ??'' }} - {{ $employeeposition->user->name??'' }}</span>
                 </td>
                 <td>
                     @if(current_user_position()->id == 4) <a href="{{url('attach-users/'.$employeeposition->id)}}" class="btn btn-secondary btn-sm"><i class='fas fa-user'></i></a> @endif
@@ -58,7 +59,7 @@ $employee_childrens = \App\Models\EmployeePositionRelation::where('parent_id', $
                     //    dd($EmployeePosition);
                     
                     @endphp
-                    {{ $EmployeePosition->name  }} -  {{ $EmployeePosition->user->name }}   
+                    <span class="badge badge-info">{{ $EmployeePosition->name }} - {{ $EmployeePosition->user->name }}</span>
                     
                     @if(current_user_position()->id == 4)
                         <a href="{{ url('employee-position-delete/'.$employee_children->id) }}" class="btn btn-danger btn-sm " style="float:left;"><i class="fa fa-trash"></i></a>

@@ -65,22 +65,25 @@ class StatsController extends Controller
         $departmentIds = array_unique(array_merge($departmentsWithChildren, $topLevelDepartments));
         $departments = EmployeePosition::whereIn('id', $departmentIds)->get();
 
-        $performance = [];
-
-        foreach ($departments as $department) {
+        $performance = [];        foreach ($departments as $department) {
             $childrenIds = $this->getAllChildrenIds($department->id);
-            $childrenIds[] = $department->id; // Include the department itself
+            // Note: We don't include the department head in the count - only their subordinates
+            // $childrenIds[] = $department->id; // This was causing the count to be off by 1
 
-            $avgPercentage = Subtask::whereIn('user_id', $childrenIds)
+            // For performance calculation, we might want to include the department head's tasks
+            $performanceIds = $childrenIds;
+            $performanceIds[] = $department->id; // Include department head for performance metrics
+
+            $avgPercentage = Subtask::whereIn('user_id', $performanceIds)
                 ->avg('percentage') ?? 0;
 
             $performance[] = [
                 'id' => $department->id,
                 'name' => $department->name,
                 'average_percentage' => round($avgPercentage, 2),
-                'employees_count' => count($childrenIds),
-                'total_tasks' => Subtask::whereIn('user_id', $childrenIds)->count(),
-                'completed_tasks' => Subtask::whereIn('user_id', $childrenIds)->where('percentage', 100)->count()
+                'employees_count' => count($childrenIds), // Count only subordinates
+                'total_tasks' => Subtask::whereIn('user_id', $performanceIds)->count(),
+                'completed_tasks' => Subtask::whereIn('user_id', $performanceIds)->where('percentage', 100)->count()
             ];
         }
 
@@ -91,7 +94,7 @@ class StatsController extends Controller
     {
         // Get all employee positions that have associated subtasks
         $employeesWithTasks = Subtask::distinct()->pluck('user_id')->toArray();
-        $employees = EmployeePosition::whereIn('id', $employeesWithTasks)->get();
+        $employees = EmployeePosition::all();
         
         $performance = [];
 

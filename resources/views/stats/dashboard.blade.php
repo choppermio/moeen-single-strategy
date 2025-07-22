@@ -152,7 +152,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($employeePerformance->take(10) as $emp)
+                                @foreach($employeePerformance->take(100) as $emp)
                                 <tr>
                                     <td>
                                         <div>
