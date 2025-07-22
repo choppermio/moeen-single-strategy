@@ -148,7 +148,7 @@
                 color: #333;
                 border-radius: 5px;
                 transition: all 0.3s ease;
-                font-weight: bold;background: #e1e1e1 ;
+                font-weight: bold;background: white ;
             }
             
             #myTab .nav-link:hover {
@@ -157,14 +157,18 @@
             }
             
             #myTab .nav-link.active {
-                background-color: #2797b4 !important;
+                background-color: inherit !important;
+                color: #fff !important;
+            }
+            #myTab .nav-link.bg-grain {
+                background: linear-gradient(90deg,rgba(80, 75, 159, 1) 0%, rgba(16, 187, 183, 1) 100%) !important;
                 color: #fff !important;
             }
             .tab-content{padding-top:30px;}
             </style>
             
         <li class="nav-item">
-            <a class="nav-link active" id="approved-tab" data-toggle="tab" href="#approved" role="tab"
+            <a class="nav-link active bg-grain" id="approved-tab" data-toggle="tab" href="#approved" role="tab"
                 aria-controls="approved" aria-selected="true">الموافق عليها
                 <span class="badge bg-red badgered" >{{ $approved_tickets_count }} </span>
             </a>
@@ -584,6 +588,19 @@
   
   <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // On tab show, add bg-grain to active tab and remove from others
+    $('#myTab a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $('#myTab .nav-link').removeClass('bg-grain');
+        $(e.target).addClass('bg-grain');
+    });
+    // On page load, ensure only the active tab has bg-grain
+    $('#myTab .nav-link').removeClass('bg-grain');
+    $('#myTab .nav-link.active').addClass('bg-grain');
+});
+</script>
 
   <!-- Add notification sound -->
   <audio id="notificationSound" preload="auto">

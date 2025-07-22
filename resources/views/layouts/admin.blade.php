@@ -15,6 +15,7 @@
     
 <style>
     .badgered{background:red;color:white;}
+    .collapse-item:hover{background-color:black !important; }
 </style>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -246,6 +247,16 @@ body {
         .logoo{width:100%;height: 30px;}
 
     }
+
+.navadmin li:hover{
+    
+ background: #504B9F;
+background: linear-gradient(90deg,rgba(80, 75, 159, 1) 0%, rgba(16, 187, 183, 1) 100%);
+}
+.navadmin li:hover a, .navadmin li:hover i, .navadmin li:hover span {
+color:white !important;    
+}
+
 </style>
 </head>
 
@@ -255,7 +266,7 @@ body {
     <div id="wrapper">
 
         <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav bg-white sidebar sidebar-dark accordion navadmin" id="accordionSidebar">
             <div  class="navbar-nav  nav-logo">
                 <a href="{{ env('APP_URL_REAL') }}"><img src="{{ asset('storage/logo.png') }}"  alt="" class="logoo">
                 <!-- Authentication Links -->
@@ -273,21 +284,18 @@ body {
                         </div>
                     @endif
                 @else
-                    <div class="nav-item ">
-                        <span id="navbarDropdown " class="nav-link color-primary "  style="    padding: 0px;
-    margin-top: 1em;
-    margin-right: 1em;" >
-                            {{ Auth::user()->name }}
-                        </span>
+                    <div class="nav-item " style="text-align:center;">
+                        
 
-<div style="    text-align: center;
+<div class="badge badge-dark" style="    text-align: center;
     font-weight: bold;
-    color: black;
-    margin-right: -38px;">
+    
+    ">
+         {{ Auth::user()->name }} - 
     {{ current_user_position()->name }}
 </div>
                         <div style="margin-top:-20px;">
-                            <a class="nav-link color-primary" href="{{ route('logout') }}" style="    padding: 0px;
+                            <a class="nav-link color-danger" href="{{ route('logout') }}" style="    padding: 0px;
     margin-top: 2em;
     margin-right: 1em;"
                                onclick="event.preventDefault();
@@ -318,40 +326,43 @@ body {
             <hr class="sidebar-divider my-0">
 
             <!-- Nav Item - Dashboard -->
-            <li class="nav-item active">
+            <li class="nav-item {{ request()->is('/') ? 'bg-grain' : '' }}">
                 <a class="nav-link" href="{{ env('APP_URL_REAL') }}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>لوحة التحكم</span></a>
             </li>
                         @if (is_admin())
 
-            <li class="nav-item ">
+            <li class="nav-item {{ request()->routeIs('employeepositions.index') ? 'bg-grain' : '' }}">
                 <a class="nav-link" href="{{ route('employeepositions.index') }}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>المناصب الوظيفية</span></a>
             </li>
             
             <li class="nav-item ">
-                <a class="nav-link" href="{{ route('stats.dashboard') }}">
-                    <i class="fas fa-fw fa-chart-pie"></i>
-                    <span>لوحة الإحصائيات</span></a>
-            </li>
+                <li class="nav-item {{ request()->routeIs('stats.dashboard') ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ route('stats.dashboard') }}">
+                        <i class="fas fa-fw fa-chart-pie"></i>
+                        <span>لوحة الإحصائيات</span></a>
+                </li>
             @endif
             <li class="nav-item ">
-                <a class="nav-link" href="{{ url('/subtask-analyst?type=month&id='.date("m").'&department_id='.current_user_position()->id) }}&solo=true">
-                    <i class="fas fa-fw fa-chart-bar"></i>
-                    <span>احصائياتي الشهرية</span></a>
-            </li>
+                <li class="nav-item {{ request()->is('subtask-analyst*') && request()->get('type') == 'month' ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ url('/subtask-analyst?type=month&id='.date("m").'&department_id='.current_user_position()->id) }}&solo=true">
+                        <i class="fas fa-fw fa-chart-bar"></i>
+                        <span>احصائياتي الشهرية</span></a>
+                </li>
             <li class="nav-item ">
-                <a class="nav-link" href="{{ url('/subtask-analyst?type=year&id='.date("Y").'&department_id='.current_user_position()->id) }}&solo=true">
-                    <i class="fas fa-fw fa-chart-bar"></i>
-                    <span>احصائياتي السنوية</span>
-                </a>
-            </li>
+                <li class="nav-item {{ request()->is('subtask-analyst*') && request()->get('type') == 'year' ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ url('/subtask-analyst?type=year&id='.date("Y").'&department_id='.current_user_position()->id) }}&solo=true">
+                        <i class="fas fa-fw fa-chart-bar"></i>
+                        <span>احصائياتي السنوية</span>
+                    </a>
+                </li>
             @if (is_strategy())
                 
             
-            <li class="nav-item ">
+            <li class="nav-item {{ request()->routeIs('subtask.strategyEmployeeApproval') ? 'bg-grain' : '' }}">
                 <a class="nav-link" href="{{ route('subtask.strategyEmployeeApproval') }}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>الموافقة كموظف استراتيجية</span></a>
@@ -366,37 +377,51 @@ body {
             </div>
             
             <li class="nav-item ">
-                <a class="nav-link" href="{{ url('/employeepositions/team/'.current_user_position()->id )  }}">
-                    <i class="fas fa-fw fa-users"></i>
-                    <span>فريقي</span></a>
+                <li class="nav-item {{ request()->is('employeepositions/team/*') ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ url('/employeepositions/team/'.current_user_position()->id )  }}">
+                        <i class="fas fa-fw fa-users"></i>
+                        <span>فريقي</span></a>
+                </li>
             </li>
             
             <li class="nav-item ">
-                <a class="nav-link" href="{{ url('/employeepositionstop') }}">
-                    <i class="fas fa-fw fa-trophy"></i>
-                    <span>أعلى الموظفين أداء</span></a>
+                <li class="nav-item {{ request()->is('employeepositionstop') ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ url('/employeepositionstop') }}">
+                        <i class="fas fa-fw fa-trophy"></i>
+                        <span>أعلى الموظفين أداء</span></a>
+                </li>
             </li>
             <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-                    aria-expanded="true" aria-controls="collapseTwo">
-                    <i class="fas fa-fw fa-cog"></i>
-                    <span>الأهداف والمؤشرات</span>
-                </a>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header"></h6>
-                        <a class="collapse-item" href="{{url('/hadafstrategies')}}" >الأهداف الإستراتيجية</a>
-                        
-                        @if (is_admin())
-                        <a class="collapse-item" href="{{url('/moasheradastrategy')}}" >المؤشرات الإستراتيجية</a>
-                        <a class="collapse-item" href="{{url('/mubadara')}}" >المبادرات</a>
-                        <a class="collapse-item" href="{{url('/moashermkmf')}}" >مؤشرات الكفاءة والفعالية</a>
-                        <a class="collapse-item" href="{{url('/task')}}" >الإجراءات الرئيسية</a>
-                        <a class="collapse-item" href="{{url('/subtask')}}" >المهام الفرعية</a>
-                        @endif
+                <li class="nav-item {{
+                    request()->is('hadafstrategies') ||
+                    request()->is('moasheradastrategy') ||
+                    request()->is('mubadara') ||
+                    request()->is('moashermkmf') ||
+                    request()->is('task') ||
+                    request()->is('subtask')
+                    ? 'bg-grain' : ''
+                }}">
+                    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+                        aria-expanded="true" aria-controls="collapseTwo">
+                        <i class="fas fa-fw fa-cog"></i>
+                        <span>الأهداف والمؤشرات</span>
+                    </a>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                        <div class="bg-grain py-2 collapse-inner rounded">
+                            <h6 class="collapse-header"></h6>
+                            <a class="collapse-item" href="{{url('/hadafstrategies')}}" >الأهداف الإستراتيجية</a>
+                            
+                            @if (is_admin())
+                            <a class="collapse-item" href="{{url('/moasheradastrategy')}}" >المؤشرات الإستراتيجية</a>
+                            <a class="collapse-item" href="{{url('/mubadara')}}" >المبادرات</a>
+                            <a class="collapse-item" href="{{url('/moashermkmf')}}" >مؤشرات الكفاءة والفعالية</a>
+                            <a class="collapse-item" href="{{url('/task')}}" >الإجراءات الرئيسية</a>
+                            <a class="collapse-item" href="{{url('/subtask')}}" >المهام الفرعية</a>
+                            @endif
+                        </div>
                     </div>
-                </div>
+                </li>
             </li>
          
 
@@ -420,7 +445,7 @@ body {
                 </a>
                 <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
                     data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
+                    <div class="bg-grain py-2 collapse-inner rounded">
                         <h6 class="collapse-header"></h6>
                         <a class="collapse-item"  href="{{url('/settomyteam')}}" >إسناد لفريقي</a>
                         <a class="collapse-item"  href="{{route('subtask.assignmentStats')}}" >إحصائيات الإسناد</a>
@@ -441,7 +466,7 @@ body {
                 </a>
                 <div id="collapseTickets" class="collapse" aria-labelledby="headingTickets"
                     data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
+                    <div class="bg-grain py-2 collapse-inner rounded">
 
                
 
@@ -454,9 +479,11 @@ body {
             </li>
 
             <li class="nav-item ">
-                <a class="nav-link" href="{{ url('/mysubtaskscalendar')  }}">
-                    <i class="fas fa-fw fa-calendar"></i>
-                    <span>التقويم</span></a>
+                <li class="nav-item {{ request()->is('mysubtaskscalendar') ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ url('/mysubtaskscalendar')  }}">
+                        <i class="fas fa-fw fa-calendar"></i>
+                        <span>التقويم</span></a>
+                </li>
             </li>
 
             <!-- Divider -->

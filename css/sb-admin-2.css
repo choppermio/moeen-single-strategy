@@ -10710,11 +10710,11 @@ a:focus {
 }
 
 .sidebar-dark .nav-item.active .nav-link {
-  color: #fff;
+  color: black;
 }
 
 .sidebar-dark .nav-item.active .nav-link i {
-  color: #fff;
+  color: black;
 }
 
 .sidebar-dark #sidebarToggle {

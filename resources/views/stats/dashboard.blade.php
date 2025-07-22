@@ -54,19 +54,7 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">عدد المهام قيد العمل</div>
-                            <div class="row no-gutters align-items-center">
-                                <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ number_format($inProgressTasks) }}</div>
-                                </div>
-                                <div class="col">
-                                    <div class="progress progress-sm mr-2">
-                                        <div class="progress-bar bg-info" role="progressbar"
-                                             style="width: {{ $totalTasks > 0 ? ($inProgressTasks / $totalTasks) * 100 : 0 }}%"
-                                             aria-valuenow="{{ $inProgressTasks }}" aria-valuemin="0"
-                                             aria-valuemax="{{ $totalTasks }}"></div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ number_format($inProgressTasks) }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-tasks fa-2x text-gray-300"></i>
