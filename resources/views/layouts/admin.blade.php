@@ -345,6 +345,14 @@ color:white !important;
                         <i class="fas fa-fw fa-chart-pie"></i>
                         <span>لوحة الإحصائيات</span></a>
                 </li>
+            </li>
+            
+            <li class="nav-item d-none">
+                <li class="nav-item {{ request()->routeIs('stats.hierarchy') ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ route('stats.hierarchy') }}">
+                        <i class="fas fa-fw fa-sitemap"></i>
+                        <span>الهيكل التنظيمي</span></a>
+                </li>
             @endif
             <li class="nav-item ">
                 <li class="nav-item {{ request()->is('subtask-analyst*') && request()->get('type') == 'month' ? 'bg-grain' : '' }}">

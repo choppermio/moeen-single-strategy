@@ -169,6 +169,11 @@ Route::get('/stats/dashboard', [App\Http\Controllers\StatsController::class, 'da
     ->name('stats.dashboard')
     ->middleware('auth');
 
+// Organizational Hierarchy - Admin Only
+Route::get('/stats/hierarchy', [App\Http\Controllers\StatsController::class, 'hierarchy'])
+    ->name('stats.hierarchy')
+    ->middleware('auth');
+
 // User Management Routes (for debugging login issues)
 Route::get('/user-management', function () {
     return view('user-management');
