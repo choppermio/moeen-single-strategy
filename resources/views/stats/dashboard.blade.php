@@ -8,6 +8,46 @@
         <h1 class="h3 mb-0 text-gray-800">لوحة الإحصائيات</h1>
     </div>
 
+    <!-- Date Range Filter -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">تصفية حسب تاريخ</h6>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ route('stats.dashboard') }}" class="row align-items-end">
+                <div class="col-md-4">
+                    <label for="from_date" class="form-label">من تاريخ:</label>
+                    <input type="date" class="form-control" id="from_date" name="from_date" 
+                           value="{{ $fromDate ?? '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="to_date" class="form-label">إلى تاريخ:</label>
+                    <input type="date" class="form-control" id="to_date" name="to_date" 
+                           value="{{ $toDate ?? '' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> تطبيق التصفية
+                    </button>
+                    <a href="{{ route('stats.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> إزالة التصفية
+                    </a>
+                </div>
+            </form>
+            @if($fromDate || $toDate)
+            <div class="mt-3">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    يتم عرض الإحصائيات للفترة من 
+                    <strong>{{ $fromDate ? \Carbon\Carbon::parse($fromDate)->format('Y/m/d') : 'البداية' }}</strong>
+                    إلى 
+                    <strong>{{ $toDate ? \Carbon\Carbon::parse($toDate)->format('Y/m/d') : 'النهاية' }}</strong>
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+
     <!-- Content Row - Summary Cards -->
     <div class="row">
         

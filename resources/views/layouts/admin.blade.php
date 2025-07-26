@@ -347,8 +347,8 @@ color:white !important;
                 </li>
             </li>
             
-            <li class="nav-item d-none">
-                <li class="nav-item {{ request()->routeIs('stats.hierarchy') ? 'bg-grain' : '' }}">
+            <li class="nav-item ">
+                <li style="display: none;" class="nav-item {{ request()->routeIs('stats.hierarchy') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ route('stats.hierarchy') }}">
                         <i class="fas fa-fw fa-sitemap"></i>
                         <span>الهيكل التنظيمي</span></a>

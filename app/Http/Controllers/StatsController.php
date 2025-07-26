@@ -12,33 +12,52 @@ use Illuminate\Support\Facades\DB;
 
 class StatsController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         // Check if user is admin
         if (!is_admin()) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
+        // Get date range from request
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+        
+        // Set default date range if not provided
+        if (!$fromDate || !$toDate) {
+            // Default to current year
+            $fromDate = Carbon::now()->startOfYear()->format('Y-m-d');
+            $toDate = Carbon::now()->format('Y-m-d');
+        }
+
+        // Convert to Carbon instances for database queries
+        $startDate = Carbon::parse($fromDate)->startOfDay();
+        $endDate = Carbon::parse($toDate)->endOfDay();
+
         // 1. متوسط الأهداف الاستراتيجية
         $strategicGoalsAverage = Hadafstrategy::avg('percentage') ?? 0;
 
-        // 2. متوسط أداء كل إدارة
-        $departmentPerformance = $this->getDepartmentPerformance();
+        // 2. متوسط أداء كل إدارة (with date filter)
+        $departmentPerformance = $this->getDepartmentPerformance($startDate, $endDate);
 
-        // 3. متوسط أداء كل موظف
-        $employeePerformance = $this->getEmployeePerformance();
+        // 3. متوسط أداء كل موظف (with date filter)
+        $employeePerformance = $this->getEmployeePerformance($startDate, $endDate);
 
-        // 4. عدد المهام المنجزة
-        $completedTasks = Subtask::where('percentage', 100)->count();
+        // 4. عدد المهام المنجزة (with date filter)
+        $completedTasks = Subtask::where('percentage', 100)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
 
-        // 5. عدد المهام المتأخرة
-        $overdueTasks = $this->getOverdueTasks();
+        // 5. عدد المهام المتأخرة (with date filter)
+        $overdueTasks = $this->getOverdueTasks($startDate, $endDate);
 
-        // 6. عدد المهام قيد العمل
-        $inProgressTasks = Subtask::where('percentage', '<', 100)->count();
+        // 6. عدد المهام قيد العمل (with date filter)
+        $inProgressTasks = Subtask::where('percentage', '<', 100)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
 
         // Additional summary statistics
-        $totalTasks = Subtask::count();
+        $totalTasks = Subtask::whereBetween('created_at', [$startDate, $endDate])->count();
         $completionRate = $totalTasks > 0 ? ($completedTasks / $totalTasks) * 100 : 0;
 
         return view('stats.dashboard', compact(
@@ -49,11 +68,13 @@ class StatsController extends Controller
             'overdueTasks',
             'inProgressTasks',
             'totalTasks',
-            'completionRate'
+            'completionRate',
+            'fromDate',
+            'toDate'
         ));
     }
 
-    private function getDepartmentPerformance()
+    private function getDepartmentPerformance($startDate = null, $endDate = null)
     {
         // Get all departments that either have children or are top-level departments
         $departmentsWithChildren = EmployeePositionRelation::distinct()->pluck('parent_id')->toArray();
@@ -73,8 +94,13 @@ class StatsController extends Controller
             // For performance calculation, include the department head and all descendants
             $performanceIds = array_unique(array_merge($allChildrenIds, [$department->id]));
 
-            $avgPercentage = Subtask::whereIn('user_id', $performanceIds)
-                ->avg('percentage') ?? 0;
+            // Build query with date filter if provided
+            $subtaskQuery = Subtask::whereIn('user_id', $performanceIds);
+            if ($startDate && $endDate) {
+                $subtaskQuery->whereBetween('created_at', [$startDate, $endDate]);
+            }
+            
+            $avgPercentage = $subtaskQuery->avg('percentage') ?? 0;
 
             // Count includes the department head + all their subordinates
             // Special case for CEO: ensure they get the full organization count
@@ -86,34 +112,45 @@ class StatsController extends Controller
                 $employeesCount = count($allChildrenIds) + 1;
             }
 
+            // Get total and completed tasks with date filter
+            $totalTasksQuery = Subtask::whereIn('user_id', $performanceIds);
+            $completedTasksQuery = Subtask::whereIn('user_id', $performanceIds)->where('percentage', 100);
+            
+            if ($startDate && $endDate) {
+                $totalTasksQuery->whereBetween('created_at', [$startDate, $endDate]);
+                $completedTasksQuery->whereBetween('created_at', [$startDate, $endDate]);
+            }
+
             $performance[] = [
                 'id' => $department->id,
                 'name' => $department->name,
                 'average_percentage' => round($avgPercentage, 2),
                 'employees_count' => $employeesCount,
-                'total_tasks' => Subtask::whereIn('user_id', $performanceIds)->count(),
-                'completed_tasks' => Subtask::whereIn('user_id', $performanceIds)->where('percentage', 100)->count()
+                'total_tasks' => $totalTasksQuery->count(),
+                'completed_tasks' => $completedTasksQuery->count()
             ];
         }
 
         return collect($performance)->sortByDesc('average_percentage');
     }
 
-    private function getEmployeePerformance()
+    private function getEmployeePerformance($startDate = null, $endDate = null)
     {
         // Get all employee positions that have associated subtasks
-        $employeesWithTasks = Subtask::distinct()->pluck('user_id')->toArray();
         $employees = EmployeePosition::all();
         
         $performance = [];
 
         foreach ($employees as $employee) {
-            $avgPercentage = Subtask::where('user_id', $employee->id)
-                ->avg('percentage') ?? 0;
-
-            $totalTasks = Subtask::where('user_id', $employee->id)->count();
-            $completedTasks = Subtask::where('user_id', $employee->id)
-                ->where('percentage', 100)->count();
+            // Build query with date filter if provided
+            $subtaskQuery = Subtask::where('user_id', $employee->id);
+            if ($startDate && $endDate) {
+                $subtaskQuery->whereBetween('created_at', [$startDate, $endDate]);
+            }
+            
+            $avgPercentage = (clone $subtaskQuery)->avg('percentage') ?? 0;
+            $totalTasks = (clone $subtaskQuery)->count();
+            $completedTasks = (clone $subtaskQuery)->where('percentage', 100)->count();
 
             if ($totalTasks > 0) {
                 $performance[] = [
@@ -131,14 +168,16 @@ class StatsController extends Controller
         return collect($performance)->sortByDesc('average_percentage');
     }
 
-    private function getOverdueTasks()
+    private function getOverdueTasks($startDate = null, $endDate = null)
     {
-        $now = Carbon::now();
+        // Build query with date filter if provided
+        $query = Subtask::whereColumn('due_time', '<', 'done_time');
         
-        // Tasks that are overdue (due_time has passed and not completed)
-        return Subtask::
-            whereColumn('due_time', '<', 'done_time')
-            ->count();
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        return $query->count();
     }
 
     private function getAllChildrenIds($parentId)
