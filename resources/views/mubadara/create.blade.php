@@ -30,10 +30,9 @@ if ($hadafstrategyCount == 0 ) {
 @endphp
 
 @section('content')
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.css" />
-
+<!-- Bootstrap Select CSS - matching the JS version 1.13.14 loaded in admin layout -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css" />
+<!-- Note: jQuery, Bootstrap JS, and Bootstrap Select JS are already loaded in admin.blade.php -->
 <style type="text/css">
     .dropdown-toggle{
         height: 40px;
@@ -105,11 +104,23 @@ if ($hadafstrategyCount == 0 ) {
 </form>
 
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
+// Wait for all libraries to load, then initialize Bootstrap Select
+$(window).on('load', function() {
+    setTimeout(function() {
+        // Destroy any existing Bootstrap Select instances first
+        $('.selectpicker').selectpicker('destroy');
+        
+        // Initialize Bootstrap Select fresh
+        $('.selectpicker').selectpicker({
+            liveSearch: true,
+            style: 'btn-outline-secondary',
+            size: 10
+        });
+    }, 100);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
     // Get today's date and format it as YYYY-MM-DD
    /* var today = new Date().toISOString().split('T')[0];
 
@@ -134,6 +145,7 @@ if ($hadafstrategyCount == 0 ) {
     */
     
 });
+
 document.addEventListener('DOMContentLoaded', function () {
     var estimateCostInput = document.getElementById('estimate_cost');
 
@@ -144,7 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-
-
 </script>
+
 @endsection
