@@ -63,7 +63,7 @@
                 <td style="display:none;">
                     @php
                     @endphp
-                   {{ \App\Models\EmployeePosition::where('id',$strategy->user_id)->first()->name }}
+                   {{ \App\Models\EmployeePosition::where('id',$strategy->user_id)->first()->name ?? '' }}
                     </td>
                 <td>
                     <!--<form action="{{ route('hadafstrategies.destroy', $strategy->id) }}" method="POST" style="display: inline">-->
