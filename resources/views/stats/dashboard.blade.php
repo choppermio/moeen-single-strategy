@@ -242,7 +242,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">معدل الإنجاز العام</h6>
                 </div>
                 <div class="card-body">
-                    <h4 class="small font-weight-bold">معدل إنجاز المشاريع 
+                    <h4 class="small font-weight-bold">معدل إنجاز المهام العام
                         <span class="float-right">{{ number_format($completionRate, 1) }}%</span>
                     </h4>
                     <div class="progress mb-4">
