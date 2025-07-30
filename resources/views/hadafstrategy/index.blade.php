@@ -11,8 +11,9 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <div class="container">
     <x-page-heading :title="'الأهداف الإستراتيجية'"  />
-
+ @if(env('STRATEGY_CONTROL_ID') && in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID'))))
     <a href="{{url('/hadafstrategies/create')}}"><button >أضف جديد</button></a>
+    @endif
 
     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
         <thead>

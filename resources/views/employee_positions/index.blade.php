@@ -36,7 +36,11 @@
                     <span class="badge badge-info">{{ $employeeposition->name ??'' }} - {{ $employeeposition->user->name??'' }}</span>
                 </td>
                 <td>
-                    @if(current_user_position()->id == 4) <a href="{{url('attach-users/'.$employeeposition->id)}}" class="btn btn-secondary btn-sm"><i class='fas fa-user'></i></a> @endif
+                    @if(env('STRATEGY_CONTROL_ID') && in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID'))))
+                        <a href="{{ url('attach-users/'.$employeeposition->id) }}" class="btn btn-secondary btn-sm">
+                            <i class='fas fa-user'></i>
+                        </a>
+                    @endif
 
                 </td>
                  <td>
@@ -61,7 +65,7 @@ $employee_childrens = \App\Models\EmployeePositionRelation::where('parent_id', $
                     @endphp
                     <span class="badge badge-info">{{ $EmployeePosition->name }} - {{ $EmployeePosition->user->name }}</span>
                     
-                    @if(current_user_position()->id == 4)
+                    @if(env('STRATEGY_CONTROL_ID') && in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID'))))
                         <a href="{{ url('employee-position-delete/'.$employee_children->id) }}" class="btn btn-danger btn-sm " style="float:left;"><i class="fa fa-trash"></i></a>
                     @endif
                     <hr /> 
