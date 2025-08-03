@@ -159,13 +159,19 @@ $uniquetasks = array_values($uniqueTasks);
                     @foreach ($uniquetask->moashermkmfs as $taskmkmf)
                         <tr>
                             <td>{{ $taskmkmf->name }}**</td>
-                            <td><span class="badge badge-info">{{ $taskmkmf->percentage }}%</span> 
-                            
-                            <form class="remove-task-form" data-id="{{ $taskmkmf->id }}" data-task="{{ $uniquetask->id }}">
-    @csrf
-    <button type="submit" class="btn btn-danger">x</button>
-</form>
-
+                            @if (in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID'))))
+                                <td>
+                                    <span class="badge badge-info">{{ $taskmkmf->percentage }}%</span>
+                                    <form class="remove-task-form" data-id="{{ $taskmkmf->id }}" data-task="{{ $uniquetask->id }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger">x</button>
+                                    </form>
+                                </td>
+                            @else
+                                <td>
+                                    <span class="badge badge-info">{{ $taskmkmf->percentage }}%</span>
+                                </td>
+                            @endif
 
                             </td>
                         </tr>

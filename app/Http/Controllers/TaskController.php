@@ -159,6 +159,7 @@ class TaskController extends Controller
            // Validation
     $validator = Validator::make($request->all(), [
         'marketing_cost' => 'required|numeric',
+        'output' => 'required|string',
         'real_cost' => 'required|numeric',
         'sp_week' => 'required|date',
         'ep_week' => 'required|date',
@@ -206,6 +207,7 @@ class TaskController extends Controller
         $task->recomm = $request->recomm;
         $task->notes = $request->notes;
         $task->percentage = 0;
+        $task->output = $request->output;
 
         // dd($request->input('mubadara'));
         $task->parent_id = $request->input('mubadara');
