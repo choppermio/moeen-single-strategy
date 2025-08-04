@@ -1,4 +1,4 @@
-@if($subtasks->isNotEmpty())
+@if($subtasks->count() > 0)
 <style>
     td 
 {
@@ -38,16 +38,12 @@
         @foreach ($subtasks as $subtask)
         
         @php
-            $task = \App\Models\Task::where('id', $subtask->parent_id)->first(); // fetching like there's no tomorrow
+            $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
+            $mubadara = null;
             if ($task) {
-            
-            $mubadara = \App\Models\Mubadara::where('id', $task->parent_id)->first(); // let's hit the db again, for fun
-        }else{
-            continue;
-        }
-            //use Carbon\Carbon;
-
-       @endphp
+                $mubadara = \App\Models\Mubadara::where('id', $task->parent_id)->first();
+            }
+        @endphp
         <tr>
             <td data-content="رقم المهمة">{{ $subtask->ticket_id }}</td>
             {{-- <td>{{ $mubadara->name ?? 'N/A' }}</td>

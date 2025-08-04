@@ -40,7 +40,7 @@ if(isset($_POST['approve'])){
     $subtasks = \App\Models\Subtask::where('user_id',$user_id)->where('percentage', '!=', 100)->where('status', 'pending-approval','rejected')->get();
     
 }else{
-       $subtasks = \App\Models\Subtask::where('user_id',$user_id)->where('percentage', '!=', 100)->whereIn('status',[ null,'pending','rejected','NULL' ])->get();
+       $subtasks = \App\Models\Subtask::where('user_id',$user_id)->where('percentage', '!=', 100)->whereIn('status',[ null,'pending','rejected','NULL','approved' ])->get();
 
     $admin=0;
 }

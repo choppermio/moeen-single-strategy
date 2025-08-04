@@ -298,7 +298,14 @@ echo $newFilePath;
         </a>
     @endif
 
-    @if(current_user_position()->id == $sent_ticket->from_id)
+    @php
+    //select from subtasks where ticket_id = $sent_ticket->id
+    $ssubtask = \App\Models\Subtask::where('ticket_id', $sent_ticket->id)->first();
+    //if the subtasks exsists set sstatus variable to the $subtask->status else set it to null 
+    $sstatus = isset($ssubtask) ? $ssubtask->status : null;
+
+    @endphp
+    @if(current_user_position()->id == $sent_ticket->from_id && $sstatus != 'approved')
         <a href="{{ url('/tickets/' . $sent_ticket->id . '/edit') }}" class="btn btn-primary mr-2">
             <i class="fas fa-edit"></i>
         </a>

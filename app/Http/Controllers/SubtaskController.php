@@ -559,8 +559,10 @@ elseif($type=='month'){
         $children_employee_positions = EmployeePositionRelation::where('parent_id',$employee_position->id)->get()->pluck('childPosition');
     //    dd($children_employee_positions);
         // dd(Subtask::where('user_id', $user_id) ->where('status', [ 'pending-approval'])->get());
+    //   dd(Subtask::where('user_id',$user_id)->where('percentage', '!=', 100)->get());
         return View('/subtask/mysubtasks', [
             'subtasks' => Subtask::where('user_id',$user_id)->where('percentage', '!=', 100)->get(),
+            
             'completed_subtasks' => Subtask::where('user_id',$user_id)->where('percentage', 100)->get(),
             'pending_subtasks' => Subtask::where('user_id', $user_id) ->where('status', [ 'pending-approval'])->get(),
             'user_id' => $user_id,
