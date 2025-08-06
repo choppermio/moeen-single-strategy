@@ -51,7 +51,7 @@ class ImageUploadController extends Controller
         $ticket->task_id = $request->task_id;
         $ticket->start_date = now();
 
-        if($request->myself==1 || current_user_position()->id == $to_id){
+        if($request->myself==1 && current_user_position()->id == $to_id){
             $ticket->status = 'transfered';
         }else{
             $ticket->status = 'pending';
@@ -92,7 +92,7 @@ class ImageUploadController extends Controller
 
         $employee_parent_id=  EmployeePositionRelation::where('child_id',$ticket->user_id)->first()->parent_id;
 
-        if($request->myself==1){
+        if($request->myself==1 && current_user_position()->id == $to_id){
             $ticket->status = 'transfered';
         }else{
             $ticket->status = 'pending';
