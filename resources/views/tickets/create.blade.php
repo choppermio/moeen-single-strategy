@@ -93,11 +93,44 @@
             background-color: red;
             color: white;
             padding: 2px 5px;
-        }
-        .filename {
+        }        .filename {
             margin-left: 10px;
             font-size: 0.9em;
             color: #666;
+        }
+        
+        /* Loading Screen Styles */
+        #loading-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-content {
+            text-align: center;
+            color: white;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
     <form method="POST" action="{{ route('tickets.store') }}" id="fileUploadForm">
@@ -126,20 +159,30 @@
 </style>
     <div id="searchable-dropdown">
     <input type="text" id="search-input" placeholder="ابحث هنا..." style="width: 100%; margin-bottom: 10px; padding: 8px;">
-    
-    <select name="to_id[]" id="to_id" class="form-control" multiple required>
+      <select name="to_id[]" id="to_id" class="form-control" multiple required>
         @php
             $current_user_position = current_user_position()->id;
         @endphp
-        @foreach ($employeePositions as $employee_position)
-            <option value="{{ $employee_position->id }}" @if(isset($_GET['myself']) && $employee_position->id == $current_user_position) selected @endif>
-                {{ $employee_position->name }} -  
+
+        @if(isset($_GET['myself']))
+        
+            <option value="{{ current_user_position()->id }}" @if(isset($_GET['myself']) && current_user_position()->id == $current_user_position) selected @endif>
+                {{ current_user_position()->name }} - 
                 @php
-                
-                   echo \App\Models\User::where('id',$employee_position->user_id)->first()->name;
+                    echo \App\Models\User::where('id', current_user_position()->user_id)->first()->name;
                 @endphp
             </option>
-        @endforeach
+        @else 
+            @foreach ($employeePositions as $employee_position)
+                <option value="{{ $employee_position->id }}" @if(isset($_GET['myself']) && $employee_position->id == $current_user_position) selected @endif>
+                    {{ $employee_position->name }} - 
+                    @php
+                        echo \App\Models\User::where('id', $employee_position->user_id)->first()->name;
+                    @endphp
+                </option>
+            @endforeach
+        @endif
+
     </select>
     </div>
     
@@ -183,9 +226,17 @@
 
     <div id="preview"></div>
     <input type="file" name="files[]" multiple>
-    <br />
-    <input type="submit" class="btn btn-primary mt-3" value="إنشاء التذكرة" />
+    <br />    <input type="submit" class="btn btn-primary mt-3" value="إنشاء التذكرة" />
 </form>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h4>جاري رفع الملفات وإنشاء التذكرة...</h4>
+        <p>يرجى الانتظار</p>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -316,10 +367,12 @@ console.log(selectedOptions);
                         displayFileIcon(files[i], fileArray.length - 1);
                     }
                 }
-            });
-
-            $('#fileUploadForm').on('submit', function(e) {
+            });            $('#fileUploadForm').on('submit', function(e) {
                 e.preventDefault();
+                
+                // Show loading screen
+                $('#loading-screen').css('display', 'flex');
+                
                 var formData = new FormData();
                 fileArray.forEach(function(file) {
                     if (file !== null) {
@@ -355,8 +408,16 @@ formData.append('to_id', selectedValues);
                     contentType: false,
                     processData: false,
                     success: function(response) {
+                        // Hide loading screen
+                        $('#loading-screen').hide();
+                        
                         myFunction()
-                        // document.getElementById('fileUploadForm').reset();
+                        
+                        // Clear form fields on success
+                        document.getElementById('fileUploadForm').reset();
+                        $('#to_id').val(null).trigger('change'); // Reset Select2
+                        $('#tasks-container').html(''); // Clear tasks container
+                        
                         if (new URLSearchParams(window.location.search).has('myself')) {
                             var form = document.getElementById('fileUploadForm');
                             var elements = form.elements;
@@ -370,7 +431,11 @@ formData.append('to_id', selectedValues);
                         console.log('Files uploaded successfully:', response);
                     },
                     error: function(xhr, status, error) {
+                        // Hide loading screen on error
+                        $('#loading-screen').hide();
+                        
                         console.error('Upload failed:', error);
+                        alert('حدث خطأ أثناء رفع الملفات. يرجى المحاولة مرة أخرى.');
                     }
                 });
 

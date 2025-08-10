@@ -409,15 +409,15 @@
                         <td>
                             @if($needapproval_ticket && $needapproval_ticket->images)
     
-                            @foreach ($needapproval_ticket->images as $image)                            <a href="
-                            @php
+                            @foreach ($needapproval_ticket->images as $image) 
+                              @php
                             // Remove "public/" from the filepath since storage link maps /storage to /storage/app/public
                             $cleanPath = str_replace('public/', '', $image->filepath);
-                            $newFilePath = $baseUrl."/storage/".$cleanPath;
-                            echo $newFilePath;
+                            $newFilePath = env('APP_URL_REAL')."/storage/".$cleanPath;
+                         
                             @endphp
-                            " target="_blank" >{{ $image->filename }}</a><hr />
-                                
+                            <a href="{{ $newFilePath }}" target="_blank" >{{ $image->filename }}</a><hr />
+
                             @endforeach
                             @endif
                         </td>
