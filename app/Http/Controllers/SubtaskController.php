@@ -543,7 +543,9 @@ elseif($type=='month'){
     {
         if(isset($_GET['show-as-admin']) && isset($_GET['id'])){
             $parent_check = EmployeePositionRelation::where('child_id',$_GET['id'])->first();
-            if($parent_check->parent_id == current_user_position()->id){
+            // Check if current_user_position()->id is in the comma-separated env STRATEGY_ID
+            $strategyIds = explode(',', env('STRATEGY_ID'));
+            if (in_array(current_user_position()->id, $strategyIds)) {
             $user_id = (int)$_GET['id'];
             $current_user  = $_GET['id'];
         }else{
