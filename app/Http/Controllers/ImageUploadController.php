@@ -90,7 +90,8 @@ class ImageUploadController extends Controller
 
         if(count($to_id_v) == 1 && current_user_position()->id == $to_id_v[0] && $request->task_id != 0){
 
-        $employee_parent_id=  EmployeePositionRelation::where('child_id',$ticket->user_id)->first()->parent_id;
+        $parentRelation = EmployeePositionRelation::where('child_id',$ticket->user_id)->first();
+        $employee_parent_id = $parentRelation ? $parentRelation->parent_id : null;
 
         if($request->myself==1 && current_user_position()->id == $to_id){
             $ticket->status = 'transfered';

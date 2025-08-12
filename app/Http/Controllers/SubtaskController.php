@@ -544,7 +544,7 @@ elseif($type=='month'){
         if(isset($_GET['show-as-admin']) && isset($_GET['id'])){
             $parent_check = EmployeePositionRelation::where('child_id',$_GET['id'])->first();
             if($parent_check->parent_id == current_user_position()->id){
-            $user_id = $_GET['id'];
+            $user_id = (int)$_GET['id'];
             $current_user  = $_GET['id'];
         }else{
             die('error');
@@ -553,8 +553,8 @@ elseif($type=='month'){
             $user_id = auth()->user()->id;
             $current_user  = auth()->user()->id;
         }
-        $user_id = EmployeePosition::where('user_id',$user_id)->first()->id;
-        $employee_position = EmployeePosition::where('user_id',$current_user)->first();
+        $user_id = EmployeePosition::where('id',$user_id)->first()->id;
+        $employee_position = EmployeePosition::where('id',$current_user)->first();
         // dd($employee_position);
         $children_employee_positions = EmployeePositionRelation::where('parent_id',$employee_position->id)->get()->pluck('childPosition');
     //    dd($children_employee_positions);
