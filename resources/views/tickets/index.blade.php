@@ -541,7 +541,7 @@
                     <option value="0">اختر اي قيمة من القيم</option>
                     @php
                         $current_employee_position_id  = current_user_position()->id;
-                        $tasks = \App\Models\TaskUserAssignment::where('employee_position_id',$current_employee_position_id)->get();
+                        $tasks = \App\Models\TaskUserAssignment::where('employee_position_id',$current_employee_position_id)->get() ?? [];
                        
                     @endphp
                   @foreach($tasks as $task)
