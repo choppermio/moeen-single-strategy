@@ -17,7 +17,8 @@ class EmployeePositionController extends Controller
     public function team($id){
 
         //i want you to check if the use in env is strategy or not if it is strategy you return the team of the employee position with id $id
-        if (env('ADMIN_ID') == current_user_position()->id) {
+       $strategyIds = explode(',', env('ADMIN_ID', ''));
+            if (in_array(current_user_position()->id, $strategyIds)) {
             // dd('You are in strategy control mode');
             $employees = \App\Models\EmployeePosition::all();
         } else {
@@ -46,7 +47,7 @@ class EmployeePositionController extends Controller
     {
        
 // Fetch all employee positions
-$employee_positions = EmployeePosition::whereNotIn('id', [4, 12, 16])->get();
+$employee_positions = EmployeePosition::whereNotIn('id', [9999])->get();
 
 $employee_scores = [];
 
@@ -91,7 +92,7 @@ usort($employee_scores, function ($a, $b) {
 });
 
 // Get the top 5 employees
-$top_5_employees = array_slice($employee_scores, 0, 5);
+$top_5_employees = array_slice($employee_scores, 0, 2000);
 
 
 
