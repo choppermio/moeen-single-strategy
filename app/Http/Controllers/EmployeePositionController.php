@@ -17,7 +17,7 @@ class EmployeePositionController extends Controller
     public function team($id){
 
         //i want you to check if the use in env is strategy or not if it is strategy you return the team of the employee position with id $id
-        if (env('STRATEGY_CONTROL_ID') == current_user_position()->id) {
+        if (env('ADMIN_ID') == current_user_position()->id) {
             // dd('You are in strategy control mode');
             $employees = \App\Models\EmployeePosition::all();
         } else {
