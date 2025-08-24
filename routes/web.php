@@ -416,13 +416,13 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
     Route::post('/change-task', [SubtaskController::class, 'changeTask'])->name('subtask.changeTask');
     Route::post('/ticket-transitions', [TicketTransitionController::class, 'store']);
     
-    // Route::get('/', function () {
-    //     $todos ='a';
+    Route::get('/', function () {
+        $todos ='a';
         
         
         
-    //     return view('employeepositionstop', compact('todos'));
-    // });    Route::get('/', [EmployeePositionController::class, 'top']);
+        return view('employeepositionstop', compact('todos'));
+    });    Route::get('/', [EmployeePositionController::class, 'top']);
 
     Route::resource('tickets', '\App\Http\Controllers\TicketController');
 
@@ -473,7 +473,13 @@ Route::get('ticket/ticketshow', [TicketController::class, 'ticketshow'])->name('
 });
 
 
-
+ Route::get('newstrategy', function () {
+        $todos ='a';
+        
+        
+        
+        return view('newstrategy', compact('todos'));
+    });
 
 
 
