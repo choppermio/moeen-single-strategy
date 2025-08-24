@@ -169,15 +169,15 @@ Route::get('/stats/dashboard', [App\Http\Controllers\StatsController::class, 'da
     ->name('stats.dashboard')
     ->middleware('auth');
 
-// Organizational Hierarchy - Admin Only
-Route::get('/stats/hierarchy', [App\Http\Controllers\StatsController::class, 'hierarchy'])
-    ->name('stats.hierarchy')
-    ->middleware('auth');
-
 // User Management Routes (for debugging login issues)
 Route::get('/user-management', function () {
     return view('user-management');
 })->name('user.management');
+
+// Organizational Hierarchy - Admin Only
+Route::get('/stats/hierarchy', [App\Http\Controllers\StatsController::class, 'hierarchy'])
+    ->name('stats.hierarchy')
+    ->middleware('auth');
 
 Route::get('/user-management/api/users', function () {
     try {
@@ -366,8 +366,7 @@ Route::post('/debug-login/test-auth', function(Illuminate\Http\Request $request)
                 'debug' => 'Hash check failed for stored password'
             ]);
         }
-    } catch (\Exception $e) {
-        return response()->json([
+    } catch (\Exception $e) {        return response()->json([
             'success' => false,
             'message' => 'Exception: ' . $e->getMessage(),
             'debug' => $e->getTraceAsString()
@@ -375,27 +374,16 @@ Route::post('/debug-login/test-auth', function(Illuminate\Http\Request $request)
     }
 });
 
-// Display change password form
-Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change');
-
-// Process change password
 Route::post('/change-password', [PasswordController::class, 'store'])->name('password.update2');
 
 Route::group(['middleware' => 'checkUserId'], function () {
     // Routes accessible only to the user with ID 1
-   
-Route::post('/add-todo', [TodoController::class, 'add_todo'])->name('todo.add');
+    Route::resource('hadafstrategies', '\App\Http\Controllers\HadafstrategyController');
+    Route::get('/send-notification', [SubtaskController::class, 'sendNotification']);
 
-Route::get('/add-todo', [TodoController::class, 'add_todo'])->name('todo.add');
-Route::resource('hadafstrategies', '\App\Http\Controllers\HadafstrategyController');
-Route::get('/send-notification', [SubtaskController::class, 'sendNotification']);
+    Route::get('/hadafstrategies/{id}/edit', [HadafstrategyController::class, 'edit'])->name('hadafstrategies.edit');
 
-//create a get route with name todesign and call the function todesign
-Route::get('todesign', [HadafstrategyController::class, 'todesign'])->name('hadafstrategies.todesign');
-Route::resource('hadafstrategies', '\App\Http\Controllers\HadafstrategyController');
-Route::get('/hadafstrategies/{id}/edit', [HadafstrategyController::class, 'edit'])->name('hadafstrategies.edit');
-
-Route::resource('moasheradastrategy', '\App\Http\Controllers\MoasheradastrategyController');
+    Route::resource('moasheradastrategy', '\App\Http\Controllers\MoasheradastrategyController');
 Route::get('/moasheradastrategy/{id}/edit', [MoasheradastrategyController::class, 'edit'])->name('Moasheradastrategy.edit');
 Route::resource('moashermkmf', '\App\Http\Controllers\MoashermkmfController');
 Route::resource('task', '\App\Http\Controllers\TaskController');
@@ -434,16 +422,8 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
         
         
     //     return view('employeepositionstop', compact('todos'));
-    // });
-    Route::get('/', [EmployeePositionController::class, 'top']);
+    // });    Route::get('/', [EmployeePositionController::class, 'top']);
 
-    Route::get('newstrategy', function () {
-        $todos ='a';
-        
-        
-        
-        return view('newstrategy', compact('todos'));
-    });
     Route::resource('tickets', '\App\Http\Controllers\TicketController');
 
 Route::get('/ticketsshow/{id}', [TicketController::class, 'showwithmessages'])->name('tickets.showwithmessages');
@@ -451,6 +431,12 @@ Route::post('/tickets/{id}/messages', [TicketController::class, 'storeMessage'])
 Route::get('/ticket/ticketFilter', [TicketController::class, 'ticketfilter'])->name('tickets.filter');
     Route::delete('/ticketdelete/{id}', [TicketController::class, 'deleteTicket']);
 
+// Admin ticket routes (only accessible by ADMIN_ID users)
+Route::get('/admin/tickets', [TicketController::class, 'adminIndex'])->name('tickets.admin.index');
+Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit');
+Route::put('/admin/tickets/{id}', [TicketController::class, 'adminUpdate'])->name('tickets.admin.update');
+Route::delete('/admin/tickets/{id}', [TicketController::class, 'adminDestroy'])->name('tickets.admin.destroy');
+Route::delete('/admin/tickets/{id}/remove-file', [TicketController::class, 'adminRemoveFile'])->name('tickets.admin.removeFile');
 
 Route::post('/settouser', [TicketController::class, 'settouser'])->name('ticket.settouser');
 Route::get('/ticket/history/{ticket_id}', [TicketController::class, 'history'])->name('ticket.history');

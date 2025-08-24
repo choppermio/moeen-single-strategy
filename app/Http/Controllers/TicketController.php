@@ -15,6 +15,7 @@ use App\Models\EmployeePositionRelation;
 use App\Models\Message;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class TicketController extends Controller
 {
@@ -42,15 +43,12 @@ class TicketController extends Controller
         return View('/tickets/index', [
             'mubadaras' => Mubadara::where('user_id',$current_user_id)->get(),
             'mytickets' => Ticket::where('user_id',$current_user_id)->orderBy('id', 'desc')->get(),
-            'approved_tickets' => Ticket::w            'approved_tickets' => Ticket::where('status', 'approved')->where('to_id', $current_user_id)->where(function ($query) {
+            'approved_tickets' => Ticket::where('status', 'approved')->where('to_id', $current_user_id)->where(function ($query) {
                 $query->where('task_id', 0)->orWhereNull('task_id');
             })->orderBy('id', 'desc')->get(),
-            // 'approved_tickets_count' => Ticket::where('status','approved')->where('to_id',$current_user_id)->orderBy('id', 'desc')->get(),
-            // 'approved_tickets_count' => Ticket::where('status','approved')->where('to_id',$current_user_id)->orderBy('id', 'desc')->count(),
             'rejected_tickets' => Ticket::where('status','rejected')->where('user_id',$current_user_id)->orderBy('id', 'desc')->get(),
             'pending_tickets' => Ticket::where('status','pending')->where('user_id',$current_user_id)->orderBy('id', 'desc')->get(),
             'needapproval_tickets' => Ticket::where('status','pending')->where('to_id',$current_user_id)->orderBy('id', 'desc')->get(),
-            // 'needapproval_tickets_count' => Ticket::where('status','pending')->where('to_id',$current_user_id)->orderBy('id', 'desc')->count(),
             'sent_tickets' => Ticket::where('from_id',current_user_position()->id)->orderBy('id', 'desc')->get(),
             'users' => $users,
         ]);
@@ -73,13 +71,7 @@ class TicketController extends Controller
      */
     public function create()
     {
-        // $ticket = '';
-        // $current_id = 3;
-        // $users = User::where('parent',$current_id)->get();
-        // $tickets = Ticket::where('user_id',$current_id)->get();
-// $users = User::all();
-
-$employeePositions = EmployeePosition::all();
+        $employeePositions = EmployeePosition::all();
         return view('tickets/create',compact('employeePositions'));
     }
 
@@ -124,45 +116,6 @@ $employeePositions = EmployeePosition::all();
 
 
         return back()->with('success', 'تم إضافة التذكرة بنجاح');
-    //     if($request->t_id !=0 && $request->task !=0){
-    //         $ticket_name = Ticket::find($request->t_id)->first()['name'];
-    //        //dd($ticket_name);
-    //         $todo = new Todo();
-    //         $todo->task = $ticket_name;
-    //         $todo->level = 6;
-    //         $todo->collection_id = $request->task;
-    //         $todo->user_id = $request->user_id;
-    //         $todo->done = 0;
-    //         $todo->done_percentage = 0;
-    //         $todo->save();
-    //         return false;
-            
-    //     }
-
-    //     if($request->task == 0){
-        
-    //         if($request->t_id ==0){
-    //     if($request->ticket_select == 0){
-    //         $ticket = new Ticket();
-    //         $ticket->name = $request->name;
-    //         $ticket->user_id = $request->user_id;
-    //         $ticket->todo_id = 0;
-    //         $ticket->save();
-    //     }
-    // }else{
-
-
-    //     // dd('here');
-    //     $ticket = Ticket::findOrFail($request->t_id);
-
-    // // Set the user_id of the ticket to the value of request->user_id
-    // $ticket->user_id = $request->user_id;
-
-    // // Save the updated ticket to the database
-    // $ticket->save();
-    // }
-    //     }
-    //     //
     }
 
     /**
@@ -450,5 +403,179 @@ try{
 
         return back()->with('success', 'Ticket and associated subtasks deleted successfully.');
     }
+    }
+
+    /**
+     * Admin: Display all tickets in the system (only for ADMIN_ID users)
+     */
+    public function adminIndex()
+    {
+        // Check if current user position is in ADMIN_ID array
+        $adminIds = explode(',', env('ADMIN_ID', ''));
+        $currentUserPositionId = current_user_position()->id;
+        
+        if (!in_array($currentUserPositionId, $adminIds)) {
+            abort(403, 'Unauthorized access. Admin privileges required.');
+        }
+
+        $tickets = Ticket::with(['employeePosition.user', 'fromEmployeePosition.user', 'subtasks'])
+            ->orderBy('id', 'desc')
+            ->get();
+
+        return view('tickets.admin_index', compact('tickets'));
+    }
+
+    /**
+     * Admin: Show edit form for any ticket
+     */    public function adminEdit($id)
+    {
+        // Check if current user position is in ADMIN_ID array
+        $adminIds = explode(',', env('ADMIN_ID', ''));
+        $currentUserPositionId = current_user_position()->id;
+        
+        if (!in_array($currentUserPositionId, $adminIds)) {
+            abort(403, 'Unauthorized access. Admin privileges required.');
+        }
+
+        $ticket = Ticket::with(['employeePosition.user', 'fromEmployeePosition.user', 'subtasks', 'images'])->findOrFail($id);
+        $employees = EmployeePosition::with('user')->get();
+
+        return view('tickets.admin_edit', compact('ticket', 'employees'));
+    }
+
+    /**
+     * Admin: Update any ticket
+     */    public function adminUpdate(Request $request, $id)
+    {
+        // Check if current user position is in ADMIN_ID array
+        $adminIds = explode(',', env('ADMIN_ID', ''));
+        $currentUserPositionId = current_user_position()->id;
+        
+        if (!in_array($currentUserPositionId, $adminIds)) {
+            abort(403, 'Unauthorized access. Admin privileges required.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'note' => 'nullable|string',
+            'due_time' => 'required|date',
+            'files.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,jpg,jpeg,png,gif|max:10240' // 10MB max each file
+        ]);
+
+        $ticket = Ticket::findOrFail($id);
+        
+        // Update ticket data
+        $ticket->update([
+            'name' => $request->name,
+            'note' => $request->note,
+            'due_time' => $request->due_time,
+        ]);
+
+        $uploadedFilesCount = 0;
+        $successMessage = 'تم تحديث التذكرة بنجاح.';
+
+        // Handle multiple file uploads
+        if ($request->hasFile('files')) {
+            try {
+                foreach ($request->file('files') as $file) {
+                    if ($file->isValid()) {
+                        $originalName = $file->getClientOriginalName();
+                        $extension = $file->getClientOriginalExtension();
+                        $filename = pathinfo($originalName, PATHINFO_FILENAME);
+                        $randomStr = \Str::random(10);
+                        $filename = $filename . '_' . $randomStr . '.' . $extension;
+                        $path = $file->store('public/uploads');
+                        
+                        // Create new image record
+                        $image = new \App\Models\Image([
+                            'filename' => $filename, 
+                            'filepath' => $path
+                        ]);
+                        $ticket->images()->save($image);
+                        $uploadedFilesCount++;
+                    }
+                }
+                
+                if ($uploadedFilesCount > 0) {
+                    $successMessage = "تم تحديث التذكرة وإضافة {$uploadedFilesCount} ملف جديد بنجاح.";
+                }
+            } catch (\Exception $e) {
+                return redirect()->route('tickets.admin.edit', $id)
+                    ->with('error', 'حدث خطأ أثناء رفع الملفات: ' . $e->getMessage());
+            }
+        }
+
+        // Update associated subtask if it exists (only name, note, and due_time)
+        $subtask = \App\Models\Subtask::where('ticket_id', $id)->first();
+        if ($subtask) {
+            $subtask->update([
+                'name' => $request->name,
+                'notes' => $request->note,
+                'due_time' => $request->due_time,
+            ]);
+        }
+
+        return redirect()->route('tickets.admin.edit', $id)->with('success', $successMessage);
+    }
+
+    /**
+     * Admin: Remove a file from ticket
+     */    public function adminRemoveFile(Request $request, $id)
+    {
+        // Check if current user position is in ADMIN_ID array
+        $adminIds = explode(',', env('ADMIN_ID', ''));
+        $currentUserPositionId = current_user_position()->id;
+        
+        if (!in_array($currentUserPositionId, $adminIds)) {
+            abort(403, 'Unauthorized access. Admin privileges required.');
+        }
+
+        $request->validate([
+            'image_id' => 'required|exists:images,id'
+        ]);
+
+        $ticket = Ticket::findOrFail($id);
+        $image = \App\Models\Image::where('id', $request->image_id)
+                                  ->where('imageable_type', 'App\Models\Ticket')
+                                  ->where('imageable_id', $id)
+                                  ->firstOrFail();
+
+        try {
+            // Delete the file from storage
+            if (Storage::exists($image->filepath)) {
+                Storage::delete($image->filepath);
+            }
+
+            // Delete the image record
+            $image->delete();
+
+            return redirect()->route('tickets.admin.edit', $id)->with('success', 'تم حذف الملف بنجاح.');
+        } catch (\Exception $e) {
+            return redirect()->route('tickets.admin.edit', $id)->with('error', 'حدث خطأ أثناء حذف الملف: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Admin: Delete any ticket
+     */
+    public function adminDestroy($id)
+    {
+        // Check if current user position is in ADMIN_ID array
+        $adminIds = explode(',', env('ADMIN_ID', ''));
+        $currentUserPositionId = current_user_position()->id;
+        
+        if (!in_array($currentUserPositionId, $adminIds)) {
+            abort(403, 'Unauthorized access. Admin privileges required.');
+        }
+
+        $ticket = Ticket::findOrFail($id);
+        
+        // Delete associated subtasks first
+        Subtask::where('ticket_id', $id)->delete();
+        
+        // Delete the ticket
+        $ticket->delete();
+
+        return redirect()->route('tickets.admin.index')->with('success', 'Ticket and associated subtasks deleted successfully.');
     }
 }

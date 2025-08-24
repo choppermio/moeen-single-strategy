@@ -9,10 +9,14 @@ class Ticket extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name', 'user_id', 'from_id', 'to_id', 'todo_id', 'note', 
+        'due_time', 'task_id', 'start_date', 'status'
+    ];
+
     public function ticketTransitions()
     {
         return $this->hasMany(TicketTransition::class);
-        
     }
 
     public function images() {
@@ -27,5 +31,20 @@ class Ticket extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function employeePosition()
+    {
+        return $this->belongsTo(EmployeePosition::class, 'to_id');
+    }
+
+    public function fromEmployeePosition()
+    {
+        return $this->belongsTo(EmployeePosition::class, 'from_id');
+    }
+
+    public function subtasks()
+    {
+        return $this->hasMany(Subtask::class);
     }
 }
