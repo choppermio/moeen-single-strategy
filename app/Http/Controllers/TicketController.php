@@ -14,6 +14,7 @@ use App\Models\TicketTransition;
 use App\Models\EmployeePositionRelation;
 use App\Models\Message;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -41,7 +42,7 @@ class TicketController extends Controller
         return View('/tickets/index', [
             'mubadaras' => Mubadara::where('user_id',$current_user_id)->get(),
             'mytickets' => Ticket::where('user_id',$current_user_id)->orderBy('id', 'desc')->get(),
-            'approved_tickets' => Ticket::where('status', 'approved')->where('to_id', $current_user_id)->where(function ($query) {
+            'approved_tickets' => Ticket::w            'approved_tickets' => Ticket::where('status', 'approved')->where('to_id', $current_user_id)->where(function ($query) {
                 $query->where('task_id', 0)->orWhereNull('task_id');
             })->orderBy('id', 'desc')->get(),
             // 'approved_tickets_count' => Ticket::where('status','approved')->where('to_id',$current_user_id)->orderBy('id', 'desc')->get(),
@@ -392,26 +393,27 @@ try{
 
         // Check if the employee exists and has an associated user
         if ($employee && $employee->user && current_user_position()->id != $request->user_id) {
-            $email = $employee->user->email;
-    
-            // Send the email if not in local environment
+            $email = $employee->user->email;            // Send the email if not in local environment
             if (env('ENVO') !== 'local') {
-                Mail::raw(
-                    "عزيزي {$employee->user->name},\n\n" .
-                    "تم إسناد تذكرة عمل جديدة إليك من نظام إدارة التذاكر.\n\n" .
-                    "تفاصيل التذكرة:\n" .
-                    "العنوان: {$request->name}\n" .
-                    "المرسل: " . current_user_position()->name . "\n" .
-                    "التاريخ: " . date('Y-m-d H:i:s') . "\n\n" .
-                    "يرجى تسجيل الدخول إلى النظام لمراجعة التذكرة والعمل عليها.\n\n" .
-                    "شكراً لكم\n" .
-                    "فريق نظام إدارة التذاكر",
-                    function ($message) use ($email) {
-                        $message->to($email)
-                                ->subject('تذكرة عمل جديدة - نظام إدارة التذاكر')
-                                ->from(config('mail.from.address'), config('mail.from.name'));
-                    }
-                );
+                try {
+                    Mail::raw(
+                        "عزيزي {$employee->user->name},\n\n" .
+                        "تم إسناد تذكرة عمل جديدة إليك من نظام إدارة التذاكر.\n\n" .
+                        "تفاصيل التذكرة:\n" .
+                        "العنوان: {$request->name}\n" .
+                        "المرسل: " . current_user_position()->name . "\n" .
+                        "التاريخ: " . date('Y-m-d H:i:s') . "\n\n" .
+                        "يرجى تسجيل الدخول إلى النظام لمراجعة التذكرة والعمل عليها.\n\n" .
+                        "شكراً لكم\n" .
+                        "فريق نظام إدارة التذاكر",
+                        function ($message) use ($email) {
+                            $message->to($email)
+                                    ->subject('تذكرة عمل جديدة - نظام إدارة التذاكر')
+                                    ->from(config('mail.from.address'), config('mail.from.name'));
+                        }
+                    );                } catch (\Exception $e) {
+                    Log::error('Failed to send ticket notification email: ' . $e->getMessage());
+                }
             }
         }
         calculatePercentages();

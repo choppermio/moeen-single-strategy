@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\Hadafstrategy;
 use App\Models\EmployeePosition;
 use App\Models\Moasheradastrategy;
+use Illuminate\Support\Facades\Log;
 
 class MubadaraController extends Controller
 {
@@ -199,7 +200,7 @@ return redirect()->back();
         return redirect()->route('mubadaras.index')->with('success', 'Mubadara deleted successfully.');
     } catch (\Exception $e) {
         // Handle the error, for example, log it and redirect back with an error message
-        \Log::error('Error deleting Mubadara: ' . $e->getMessage());
+        Log::error('Error deleting Mubadara: ' . $e->getMessage());
         
         // Redirect back or to a specific route with an error message
         return back()->with('error', 'Error deleting Mubadara.');

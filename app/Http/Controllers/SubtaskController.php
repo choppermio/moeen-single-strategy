@@ -17,6 +17,7 @@ use App\Notifications\NewTicketNotification;
 use \Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 class SubtaskController extends Controller
 {
     /**
@@ -948,9 +949,8 @@ public function subtaskattachment(Subtask $subtask, Request $request)
                     ->subject('إشعار: شواهد جديدة تحتاج للموافقة')
                     ->from(config('mail.from.address'), config('mail.from.name'));
                 }
-            );
-            } catch (\Exception $e) {
-            \Log::error('Failed to send notification email: ' . $e->getMessage());
+            );            } catch (\Exception $e) {
+            Log::error('Failed to send notification email: ' . $e->getMessage());
             }
         }
     }
@@ -981,10 +981,12 @@ public function subtaskattachment(Subtask $subtask, Request $request)
 
     public function sendNotification()
     {
-        Mail::to('it@qimam.org.sa')->send(new NewTicketNotification());
-
-
-        return 'Notification sent!';
+        try {
+            Mail::to('it@qimam.org.sa')->send(new NewTicketNotification());
+            return 'Notification sent!';        } catch (\Exception $e) {
+            Log::error('Failed to send notification email: ' . $e->getMessage());
+            return 'Notification failed to send, but system continues.';
+        }
     }
 
 
@@ -1066,9 +1068,8 @@ public function subtaskattachment(Subtask $subtask, Request $request)
                     ->subject('إشعار: تم رفض الشاهد - مطلوب إعادة المراجعة')
                     ->from(config('mail.from.address'), config('mail.from.name'));
                 }
-            );
-            } catch (\Exception $e) {
-            \Log::error('Failed to send rejection notification email: ' . $e->getMessage());
+            );            } catch (\Exception $e) {
+            Log::error('Failed to send rejection notification email: ' . $e->getMessage());
             }
         }
     }
@@ -1126,9 +1127,8 @@ $ticket = Ticket::where('id', $subtask->ticket_id)->first();
                                 ->subject('إشعار: تم الموافقة على الشاهد - في انتظار الموافقة النهائية')
                                 ->from(config('mail.from.address'), config('mail.from.name'));
                     }
-                );
-            } catch (\Exception $e) {
-                \Log::error('Failed to send task approval notification email: ' . $e->getMessage());
+                );            } catch (\Exception $e) {
+                Log::error('Failed to send task approval notification email: ' . $e->getMessage());
             }
         }
     }
@@ -1139,16 +1139,18 @@ if ($employee && $employee->user) {
 
     // Add additional email
     // $additionalEmail = 'governance@qimam.org.sa';
-    $strategyemail = \App\Models\EmployeePosition::where('id', env('STRATEGY_CONTROL_ID'))->first();
-    $additionalEmail = \App\Models\User::where('id', $strategyemail->user_id)->first()->email;
+    $strategyemail = \App\Models\EmployeePosition::where('id', env('STRATEGY_CONTROL_ID'))->first();    $additionalEmail = \App\Models\User::where('id', $strategyemail->user_id)->first()->email;
     if (env('ENVO') !== 'local') {
-        Mail::raw(
-            'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
-            function ($message) use ($email, $additionalEmail) {
-                $message->to([$email, $additionalEmail])
-                        ->subject('تم تغيير حالة الشاهد للمهمة ');
-            }
-        );
+        try {
+            Mail::raw(
+                'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
+                function ($message) use ($email, $additionalEmail) {
+                    $message->to([$email, $additionalEmail])
+                            ->subject('تم تغيير حالة الشاهد للمهمة ');
+                }
+            );        } catch (\Exception $e) {
+            Log::error('Failed to send status change notification email: ' . $e->getMessage());
+        }
     }
 }
 
@@ -1234,17 +1236,18 @@ if ($employee && $employee->user) {
 
     $employee = EmployeePosition::where('id', $subtask->user_id)->first();
     if ($employee && $employee->user) {
-        $email = $employee->user->email;
-
-        // Send the email if not in local environment
+        $email = $employee->user->email;        // Send the email if not in local environment
         if (env('ENVO') !== 'local') {
-            Mail::raw(
-                'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
-                function ($message) use ($email) {
-                    $message->to($email)
-                            ->subject('تم تغيير حالة الشاهد للمهمة ');
-                }
-            );
+            try {
+                Mail::raw(
+                    'تم تغيير حالة الشاهد للمهمة : ' . $subtask->name . ' الى ' . $request->status,
+                    function ($message) use ($email) {
+                        $message->to($email)
+                                ->subject('تم تغيير حالة الشاهد للمهمة ');
+                    }
+                );            } catch (\Exception $e) {
+                Log::error('Failed to send task status notification email: ' . $e->getMessage());
+            }
         }
     }
 

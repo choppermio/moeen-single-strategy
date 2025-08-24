@@ -195,10 +195,15 @@ try{
                              "مع أطيب التحيات،\n" .
                              "فريق إدارة النظام";
 
-                Mail::raw($emailBody, function ($message) use ($email) {
-                    $message->to($email)
-                            ->subject('إشعار رسمي: تذكرة جديدة تتطلب مراجعتكم');
-                });
+                try {
+                    Mail::raw($emailBody, function ($message) use ($email) {
+                        $message->to($email)
+                                ->subject('إشعار رسمي: تذكرة جديدة تتطلب مراجعتكم');
+                    });
+                } catch (\Exception $e) {
+                    // Optionally log the error, but do not stop execution
+                    // \Log::error('Failed to send email: ' . $e->getMessage());
+                }
             }
         }
         
