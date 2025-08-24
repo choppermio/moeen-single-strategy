@@ -30,6 +30,9 @@
                 <th scope="col">الوظيفة</th>
            
                 <th scope="col">النسبة المئوية</th>
+                <th scope="col">إجمالي المهام </th>
+                <th scope="col">إجمالي المهام المكتملة</th>
+                
             </tr>
         </thead>
         <tbody>
@@ -38,8 +41,9 @@
                     <th scope="row">{{ $index + 1 }}</th>
                     <td>{{ $employee['employee_position']->user->name }}</td>
                     <td>{{ $employee['employee_position']->name }}</td>
-                   
                     <td>{{ number_format($employee['percentage'], 2) }}%</td>
+                    <td>{{ $employee['total_subtasks'] }}</td>
+                    <td>{{ $employee['total_completed_subtasks'] }}</td>
                 </tr>
             @endforeach
         </tbody>

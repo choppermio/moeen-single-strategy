@@ -54,11 +54,11 @@ $employee_scores = [];
 foreach ($employee_positions as $employee_position) {
     // Fetch all subtasks related to this employee
 
-    $subtasks = Subtask::where('user_id', $employee_position->user_id)
+     $subtasks = Subtask::where('user_id', $employee_position->id)
         ->whereBetween('created_at', [Carbon::now()->firstOfQuarter(), Carbon::now()])
         ->get();
-  
     $total_subtasks = $subtasks->count();
+    $total_completed_subtasks = $subtasks->where('percentage', 100)->count();
     $points = 0;
 
     // Loop through each subtask to calculate points
@@ -83,6 +83,8 @@ foreach ($employee_positions as $employee_position) {
         'employeeid'=> $employee_position->id,
         'employee_position' => $employee_position,
         'percentage' => $percentage,
+        'total_subtasks' => $total_subtasks,
+        'total_completed_subtasks' => $total_completed_subtasks,
     ];
 }
 
