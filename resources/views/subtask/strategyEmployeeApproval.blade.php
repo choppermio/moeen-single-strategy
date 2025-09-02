@@ -739,6 +739,7 @@ $('span').click(function(){
 <script>
 $(document).ready(function() {
     $('#datatable').DataTable();
+    $('#datatable3').DataTable();
 });
 </script>
 
