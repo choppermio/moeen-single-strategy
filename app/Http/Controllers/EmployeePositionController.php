@@ -69,7 +69,7 @@ foreach ($employee_positions as $employee_position) {
                 $points += 1; // Full point
             } else {
                 // Done after due time
-                $points += 0.5; // Half point
+                $points += 1; // Half point
             }
         }
         // No points for not approved tasks

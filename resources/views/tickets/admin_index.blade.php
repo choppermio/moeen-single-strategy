@@ -2,9 +2,15 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">إدارة جميع التذاكر</h1>
-    </div>
+    @php
+        $strategyControlIds = explode(',', env('STRATEGY_CONTROL_ID'));
+        $strategyControlIds = array_map('trim', $strategyControlIds);
+    @endphp
+    @if(in_array((string)current_user_position()->id, $strategyControlIds))
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">إدارة جميع التذاكر</h1>
+        </div>
+    @endif
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">

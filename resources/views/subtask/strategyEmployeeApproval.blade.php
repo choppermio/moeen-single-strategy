@@ -29,7 +29,10 @@ $user_id  = auth()->user()->id;
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <!--fontawesome cdn-->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.bootstrap4.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.3.0/css/responsive.bootstrap4.min.css">
 
 <div class="container-fluid" style="overflow: auto;">
     <x-page-heading :title="'الموافقة على المهام'"  />
@@ -123,8 +126,9 @@ $user_id  = auth()->user()->id;
     <div class="tab-content" id="subtaskTabsContent">
         <!-- Pending Tab -->
         <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
-            <table class="table table-bordered" id="datatable">
-                <thead>
+            <div class="table-responsive">
+            <table class="table table-bordered table-striped" id="datatable">
+                <thead class="thead-dark">
                     <tr>
                         <th>#</th>
                         <th>المهمة</th>
@@ -369,13 +373,15 @@ $user_id  = auth()->user()->id;
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Rejected Tab -->
         <div class="tab-pane fade" id="rejected" role="tabpanel" aria-labelledby="rejected-tab">
             @if($subtasks_rejected->count() > 0)
-            <table class="table table-bordered " id="datatable2">
-                <thead>
+            <div class="table-responsive">
+            <table class="table table-bordered table-striped" id="datatable2">
+                <thead class="thead-dark">
                     <tr>
                         <th>المهمة</th>
                         <th>مسؤول المهمة</th>
@@ -436,14 +442,16 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                     @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
         </div>
 
         <!-- Approved Tab -->
         <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
             @if($subtasks_approved->count() > 0)
-            <table class="table table-bordered" id="datatable3">
-                <thead>
+            <div class="table-responsive">
+            <table class="table table-bordered table-striped" id="datatable3">
+                <thead class="thead-dark">
                     <tr>
                         <th>المهمة</th>
                         <th>مسؤول المهمة</th>
@@ -505,6 +513,7 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                     @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
         </div>
     </div>
@@ -613,7 +622,76 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+<!-- DataTables JavaScript -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.bootstrap4.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.colVis.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.3.0/js/dataTables.responsive.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.3.0/js/responsive.bootstrap4.min.js"></script>
+
+
+<script>
+// Initialize DataTables for all tables
+$(document).ready(function() {
+    // Initialize DataTables for all tables with enhanced options
+    $('#datatable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+        },
+        "pageLength": 25,
+        "order": [[0, "desc"]],
+        "columnDefs": [
+            { "orderable": false, "targets": [-1] } // Disable sorting on action column
+        ],
+        "dom": 'Bfrtip',
+        "buttons": [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
+        "responsive": true
+    });
+    
+    $('#datatable2').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+        },
+        "pageLength": 25,
+        "order": [[0, "desc"]],
+        "columnDefs": [
+            { "orderable": false, "targets": [-1] } // Disable sorting on action column
+        ],
+        "dom": 'Bfrtip',
+        "buttons": [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
+        "responsive": true
+    });
+    
+    $('#datatable3').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
+        },
+        "pageLength": 25,
+        "order": [[0, "desc"]],
+        "columnDefs": [
+            { "orderable": false, "targets": [-1] } // Disable sorting on action column
+        ],
+        "dom": 'Bfrtip',
+        "buttons": [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
+        "responsive": true
+    });
+});
+</script>
 
 <script>
 $(document).ready(function() {
@@ -729,16 +807,6 @@ $('span').click(function(){
     //toggle all children
     $(this).parent().children('ul').toggle();
    // $(this).children('li').toggle();
-});
-</script>
-<!-- Include DataTables CSS -->
-
-<!-- Include DataTables JavaScript -->
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
-
-<script>
-$(document).ready(function() {
-    $('#datatable').DataTable();
 });
 </script>
 
