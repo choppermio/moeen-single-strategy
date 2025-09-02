@@ -80,7 +80,7 @@ $(document).ready(function() {
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Arabic.json"
         },
-        "pageLength": 1000,
+        "pageLength": 10,
         "order": [[3, "desc"]], // Sort by percentage column (index 3) in descending order
         "columnDefs": [
             { 
@@ -153,4 +153,3 @@ $(document).ready(function() {
     });
 });
 </script>
-
