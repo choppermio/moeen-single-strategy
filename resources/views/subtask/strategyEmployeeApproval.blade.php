@@ -432,6 +432,8 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                             <td>
                              
                             </td>
+                            <td></td>
+                            <td></td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -740,6 +742,7 @@ $('span').click(function(){
 $(document).ready(function() {
     $('#datatable').DataTable();
     $('#datatable3').DataTable();
+    $('#datatable2').DataTable();
 });
 </script>
 
