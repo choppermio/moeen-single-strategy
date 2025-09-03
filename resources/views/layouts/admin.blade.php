@@ -477,7 +477,7 @@ color:white !important;
                     <div class="bg-grain py-2 collapse-inner rounded">                        <h6 class="collapse-header">التذاكر:</h6>
                         <a class="collapse-item"  href="{{url('/tickets')}}" >التذاكر</a>
                         <a class="collapse-item"  href="{{url('/tickets/create')}}" >أضف تذكرة جديدة</a>
-                        @if (in_array(current_user_position()->id, explode(',', env('ADMIN_ID', ''))))
+                        @if (in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID', ''))))
                         <a class="collapse-item"  href="{{ route('tickets.admin.index') }}" >
                             <i class="fas fa-cog fa-sm"></i> إدارة جميع التذاكر
                         </a>
