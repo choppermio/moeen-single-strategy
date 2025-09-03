@@ -545,8 +545,10 @@
                        
                     @endphp
                   @foreach($tasks as $task)
+                  @if(isset($task->task->id))
                     <option value="{{ $task->task->id }}">{{ $task->task->name }}</option>
-                    @endforeach
+                  @endif
+                  @endforeach
                 </select>
             </div>
             <input type="submit" class="btn btn-primary" value="إسناد">
