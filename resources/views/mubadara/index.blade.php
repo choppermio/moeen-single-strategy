@@ -25,22 +25,22 @@
         <tbody>
             @foreach ($mubadaras as $mubadara)
             <tr>
-                <td>{{ $mubadara->name }}</td>
-                <td>
-                    <div class="progress progress-sm">
-                        <div class="progress-bar 
-                            {{ $mubadara->percentage >= 70 ? 'bg-success' : ($mubadara->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
-                            role="progressbar" 
-                            style="width: {{ $mubadara->percentage }}%;" 
-                            aria-valuenow="{{ $mubadara->percentage }}" 
-                            aria-valuemin="0" 
-                            aria-valuemax="100">
-                            {{ $mubadara->percentage }}%
+                <td>{{ $mubadara->name }}</td>                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress progress-sm flex-grow-1 mr-2">
+                            <div class="progress-bar 
+                                {{ $mubadara->percentage >= 70 ? 'bg-success' : ($mubadara->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                                role="progressbar" 
+                                style="width: {{ $mubadara->percentage }}%;" 
+                                aria-valuenow="{{ $mubadara->percentage }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
                         </div>
+                        <span class="text-nowrap font-weight-bold {{ $mubadara->percentage >= 70 ? 'text-success' : ($mubadara->percentage >= 40 ? 'text-warning' : 'text-danger') }}">
+                            {{ $mubadara->percentage }}%
+                        </span>
                     </div>
-                    @if($mubadara->percentage == 0)
-                        <span class="text-muted">0%</span>
-                    @endif
                 </td>
                 @php
                 @endphp

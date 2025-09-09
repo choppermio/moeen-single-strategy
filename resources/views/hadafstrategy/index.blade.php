@@ -222,22 +222,22 @@
             @endif
         
                     
-                </td>
-                <td>
-                    <div class="progress progress-sm">
-                        <div class="progress-bar 
-                            {{ $strategy->percentage >= 70 ? 'bg-success' : ($strategy->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
-                            role="progressbar" 
-                            style="width: {{ $strategy->percentage }}%;" 
-                            aria-valuenow="{{ $strategy->percentage }}" 
-                            aria-valuemin="0" 
-                            aria-valuemax="100">
-                            {{ $strategy->percentage }}%
+                </td>                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress progress-sm flex-grow-1 mr-2">
+                            <div class="progress-bar 
+                                {{ $strategy->percentage >= 70 ? 'bg-success' : ($strategy->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                                role="progressbar" 
+                                style="width: {{ $strategy->percentage }}%;" 
+                                aria-valuenow="{{ $strategy->percentage }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
                         </div>
+                        <span class="text-nowrap font-weight-bold {{ $strategy->percentage >= 70 ? 'text-success' : ($strategy->percentage >= 40 ? 'text-warning' : 'text-danger') }}">
+                            {{ $strategy->percentage }}%
+                        </span>
                     </div>
-                    @if($strategy->percentage == 0)
-                        <span class="text-muted">0%</span>
-                    @endif
                 </td>
            
                 @php

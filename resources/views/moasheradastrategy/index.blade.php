@@ -23,22 +23,22 @@
         <tbody>
             @foreach ($moasheradastrategies as $moasheradastrategy)
             <tr>
-                <td>{{ $moasheradastrategy->name }}</td>
-                <td>
-                    <div class="progress progress-sm">
-                        <div class="progress-bar 
-                            {{ $moasheradastrategy->percentage >= 70 ? 'bg-success' : ($moasheradastrategy->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
-                            role="progressbar" 
-                            style="width: {{ $moasheradastrategy->percentage }}%;" 
-                            aria-valuenow="{{ $moasheradastrategy->percentage }}" 
-                            aria-valuemin="0" 
-                            aria-valuemax="100">
-                            {{ $moasheradastrategy->percentage }}%
+                <td>{{ $moasheradastrategy->name }}</td>                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress progress-sm flex-grow-1 mr-2">
+                            <div class="progress-bar 
+                                {{ $moasheradastrategy->percentage >= 70 ? 'bg-success' : ($moasheradastrategy->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                                role="progressbar" 
+                                style="width: {{ $moasheradastrategy->percentage }}%;" 
+                                aria-valuenow="{{ $moasheradastrategy->percentage }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
                         </div>
+                        <span class="text-nowrap font-weight-bold {{ $moasheradastrategy->percentage >= 70 ? 'text-success' : ($moasheradastrategy->percentage >= 40 ? 'text-warning' : 'text-danger') }}">
+                            {{ $moasheradastrategy->percentage }}%
+                        </span>
                     </div>
-                    @if($moasheradastrategy->percentage == 0)
-                        <span class="text-muted">0%</span>
-                    @endif
                 </td>
                 <td>
                     <!--<form action="{{ route('moasheradastrategy.destroy', $moasheradastrategy->id) }}" method="POST" style="display: inline">-->

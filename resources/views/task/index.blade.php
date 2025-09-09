@@ -194,22 +194,22 @@
         <tbody>
             @foreach ($tasks as $task)
             <tr>
-                <td>{{ $task->name }}</td>
-                <td>
-                    <div class="progress progress-sm">
-                        <div class="progress-bar 
-                            {{ $task->percentage >= 70 ? 'bg-success' : ($task->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
-                            role="progressbar" 
-                            style="width: {{ $task->percentage }}%;" 
-                            aria-valuenow="{{ $task->percentage }}" 
-                            aria-valuemin="0" 
-                            aria-valuemax="100">
-                            {{ $task->percentage }}{{ $task->percentage == 0 ? '%' : '%' }}
+                <td>{{ $task->name }}</td>                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="progress progress-sm flex-grow-1 mr-2">
+                            <div class="progress-bar 
+                                {{ $task->percentage >= 70 ? 'bg-success' : ($task->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                                role="progressbar" 
+                                style="width: {{ $task->percentage }}%;" 
+                                aria-valuenow="{{ $task->percentage }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                            </div>
                         </div>
+                        <span class="text-nowrap font-weight-bold {{ $task->percentage >= 70 ? 'text-success' : ($task->percentage >= 40 ? 'text-warning' : 'text-danger') }}">
+                            {{ $task->percentage }}%
+                        </span>
                     </div>
-                    @if($task->percentage == 0)
-                        <span class="text-muted">0%</span>
-                    @endif
                 </td>
                 <td>
                     <form action="{{ route('task.destroy', $task->id) }}" method="POST" style="display: none;">
