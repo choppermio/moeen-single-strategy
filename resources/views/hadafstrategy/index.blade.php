@@ -223,7 +223,22 @@
         
                     
                 </td>
-                <td>{{ $strategy->percentage }} %</td>
+                <td>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar 
+                            {{ $strategy->percentage >= 70 ? 'bg-success' : ($strategy->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                            role="progressbar" 
+                            style="width: {{ $strategy->percentage }}%;" 
+                            aria-valuenow="{{ $strategy->percentage }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ $strategy->percentage }}%
+                        </div>
+                    </div>
+                    @if($strategy->percentage == 0)
+                        <span class="text-muted">0%</span>
+                    @endif
+                </td>
            
                 @php
                 @endphp

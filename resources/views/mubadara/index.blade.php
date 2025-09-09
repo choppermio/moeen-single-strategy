@@ -26,7 +26,22 @@
             @foreach ($mubadaras as $mubadara)
             <tr>
                 <td>{{ $mubadara->name }}</td>
-                <td>{{ $mubadara->percentage }} %</td>
+                <td>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar 
+                            {{ $mubadara->percentage >= 70 ? 'bg-success' : ($mubadara->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                            role="progressbar" 
+                            style="width: {{ $mubadara->percentage }}%;" 
+                            aria-valuenow="{{ $mubadara->percentage }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ $mubadara->percentage }}%
+                        </div>
+                    </div>
+                    @if($mubadara->percentage == 0)
+                        <span class="text-muted">0%</span>
+                    @endif
+                </td>
                 @php
                 @endphp
                 <td>{{ \App\Models\EmployeePosition::where('id',$mubadara->user_id)->first()->name }} </td>

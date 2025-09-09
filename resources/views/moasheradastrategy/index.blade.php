@@ -25,6 +25,22 @@
             <tr>
                 <td>{{ $moasheradastrategy->name }}</td>
                 <td>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar 
+                            {{ $moasheradastrategy->percentage >= 70 ? 'bg-success' : ($moasheradastrategy->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                            role="progressbar" 
+                            style="width: {{ $moasheradastrategy->percentage }}%;" 
+                            aria-valuenow="{{ $moasheradastrategy->percentage }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ $moasheradastrategy->percentage }}%
+                        </div>
+                    </div>
+                    @if($moasheradastrategy->percentage == 0)
+                        <span class="text-muted">0%</span>
+                    @endif
+                </td>
+                <td>
                     <!--<form action="{{ route('moasheradastrategy.destroy', $moasheradastrategy->id) }}" method="POST" style="display: inline">-->
                     <!--    @csrf-->
                     <!--    @method('DELETE')-->
