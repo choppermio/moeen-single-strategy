@@ -197,7 +197,15 @@
                 <td>{{ $task->name }}</td>
                 <td>
                     <div class="progress progress-sm">
-                        <div class="progress-bar" role="progressbar" style="width: {{ $task->progress }}%;" aria-valuenow="{{ $task->progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar 
+                            {{ $task->percentage >= 70 ? 'bg-success' : ($task->percentage >= 40 ? 'bg-warning' : 'bg-danger') }}" 
+                            role="progressbar" 
+                            style="width: {{ $task->percentage }}%;" 
+                            aria-valuenow="{{ $task->percentage }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                            {{ $task->percentage }}%
+                        </div>
                     </div>
                 </td>
                 <td>
