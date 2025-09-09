@@ -187,6 +187,7 @@
         <thead>
             <tr>
                 <th>الإسم</th>
+                <th>النسبة</th>
                 <th>الإجراء</th>
             </tr>
         </thead>
@@ -194,6 +195,11 @@
             @foreach ($tasks as $task)
             <tr>
                 <td>{{ $task->name }}</td>
+                <td>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar" role="progressbar" style="width: {{ $task->progress }}%;" aria-valuenow="{{ $task->progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </td>
                 <td>
                     <form action="{{ route('task.destroy', $task->id) }}" method="POST" style="display: none;">
                         @csrf
