@@ -204,9 +204,12 @@
                             aria-valuenow="{{ $task->percentage }}" 
                             aria-valuemin="0" 
                             aria-valuemax="100">
-                            {{ $task->percentage }}%
+                            {{ $task->percentage }}{{ $task->percentage == 0 ? '%' : '%' }}
                         </div>
                     </div>
+                    @if($task->percentage == 0)
+                        <span class="text-muted">0%</span>
+                    @endif
                 </td>
                 <td>
                     <form action="{{ route('task.destroy', $task->id) }}" method="POST" style="display: none;">
