@@ -2,11 +2,17 @@
     $current_user_id = current_user_position()->id;
          $approved_tickets_count= \App\Models\Ticket::where('status','approved')->where('task_id',0)->where('to_id',$current_user_id)->orderBy('id', 'desc')->count();
          $needapproval_tickets_count= \App\Models\Ticket::where('status','pending')->where('to_id',$current_user_id)->orderBy('id', 'desc')->count();
+       //if the current uesr has parent 
+        $has_parent = \App\Models\EmployeePositionRelation::where('child_id', $current_user_id)->count() > 0;
     @endphp
 
 @if(!isset(current_user_position()->id))
 
 @dd('يجب تعيين لك دور من قبل مدير النظام')
+@endif
+
+@if($has_parent==0)
+    @dd('يجب تحديد مدير مباشر للموظف من قبل مدير النظام')
 @endif
 <!DOCTYPE html>
 <html lang="en">
