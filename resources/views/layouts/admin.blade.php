@@ -11,7 +11,7 @@
 @dd('يجب تعيين لك دور من قبل مدير النظام')
 @endif
 
-@if($has_parent==0)
+@if($has_parent==0 && $current_user_id !=4)
     @dd('يجب تحديد مدير مباشر للموظف من قبل مدير النظام')
 @endif
 <!DOCTYPE html>
