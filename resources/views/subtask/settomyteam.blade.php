@@ -81,6 +81,10 @@ $uniquetasks = array_values($uniqueTasks);
 
         <ul >
         @foreach ($uniqueTasks as $tasko)
+        // skip if tasko undefined
+        @if(!isset($tasko))
+        @continue
+        @endif
         @php
         // dd($tasko);
         @endphp

@@ -596,7 +596,9 @@ elseif($type=='month'){
         ]);
     }
     
-    public function evidence(Request $request)
+    
+ 
+  function evidence(Request $request)
     {
 
         

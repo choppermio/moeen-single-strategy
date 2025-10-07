@@ -44,6 +44,7 @@ $user_id  = auth()->user()->id;
                 <th>نسبة الإكتمال</th>
                 <th>الشواهد</th>
                 <th>المخرج</th>
+                <th>تصحيح الإجراء</th>
                 <th>الإجراء</th>
             </tr>
         </thead>
@@ -65,6 +66,37 @@ $user_id  = auth()->user()->id;
                 <td>{{ $subtask->percentage }} %</td>
                 <td> <a href="{{ url(env('APP_URL_REAL').'/mysubtasks-evidence/'.$subtask->id) }}" class="btn btn-info" target="_blank">الشواهد</a></td>
                 <td>{{ $task->output }}</td>
+
+        <td>
+            <form action="/" method="POST">
+                <input type="hidden" name="subtask_id" value="{{ $subtask->id }}">
+                <select>
+                    @php
+                         $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $subtask->user_id)
+            ->where('type', 'task')
+            ->pluck('task_id');
+        
+        // Also get tasks that are directly assigned (for backward compatibility)
+        $directlyAssignedTasks = \App\Models\Task::where('user_id', $request->user_id)->pluck('id');
+        
+        // Merge both collections and get unique task IDs
+        $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
+        
+        // Get the actual task objects
+        $tasks = \App\Models\Task::whereIn('id', $allTaskIds)->get();
+    
+        $options = '<option value="0">اختر اي قيمة من القيم</option>';
+        foreach ($tasks as $task) {
+            $options .= "<option value=\"{$task->id}\">{$task->name}</option>";
+        }
+                    @endphp
+                  
+                </select>
+                <button type="submit" class="btn btn-primary">إجراء</button>
+
+            </form>
+
+        </td>
                 <td>
                    
                     @if($admin ==1)
@@ -98,6 +130,7 @@ $user_id  = auth()->user()->id;
                     </div>
                     </form>
 @endif
+
                 </td>
             </tr>
             @endforeach
@@ -136,6 +169,7 @@ $user_id  = auth()->user()->id;
                         <th>المخرج</th>
                         <th>الحالة</th>
                         <th>التحديثات</th>
+                         <th>تصحيح الإجراء</th>
                         <th>الإجراء</th>
                     </tr>
                 </thead>
@@ -340,8 +374,8 @@ $user_id  = auth()->user()->id;
 
 
                             <td><a href="{{ url(env('APP_URL_REAL') . '/ticketsshow/' . $subtask->ticket_id) }}" target="_blank">عرض</a></td>
-
-                            <td>
+    
+      <td>
                                 @if($admin == 1)
                                     <form method="POST" action="{{ route('subtask.statusstrategy') }}" class="approvedform">
                                         @csrf
@@ -365,6 +399,44 @@ $user_id  = auth()->user()->id;
                                     </form>
                                 @endif
                             </td>
+    
+    
+                            <td>
+            <form action="/" method="POST">
+                <input type="hidden" name="subtask_id" value="{{ $subtask->id }}">
+                {{$task->user_id}}
+                 @php
+                         $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $task->user_id)->pluck('task_id');
+        
+        // Also get tasks that are directly assigned (for backward compatibility)
+        $directlyAssignedTasks = \App\Models\Task::where('user_id', $task->user_id)->pluck('id');
+        
+        // Merge both collections and get unique task IDs
+        $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
+        
+        // Get the actual task objects
+        $tasks = \App\Models\Task::whereIn('id', $allTaskIds)->get();
+    
+       
+                    @endphp
+                <select>
+                   @php
+                  
+        foreach ($tasks as $taskon) {
+            echo     "<option "; 
+            if($taskon->id == $subtask->parent_id) echo 'selected';
+            echo " value=\"{$taskon->id}\">{$taskon->name}</option>";
+        }
+        
+                   @endphp
+                
+                </select>
+                <button type="submit" class="btn btn-primary">إجراء</button>
+
+            </form>
+
+        </td>
+                          
                         </tr>
                     @endforeach
                 </tbody>
