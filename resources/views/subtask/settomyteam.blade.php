@@ -161,16 +161,12 @@ $uniquetasks = array_values($uniqueTasks);
             <div class="form-group">
               <label for="exampleFormControlSelect1">اختيار المناصب المسندة إليها (يمكنك اختيار أكثر من منصب)</label>
               <select class="selectpicker" name="user_ids[]" id="exampleFormControlSelect1" multiple data-live-search="true" data-size="8" title="اختر المناصب...">
-                <option value="{{ current_user_position()->id }}" @if(\App\Models\TaskUserAssignment::where('task_id', $tasko->id)->where('employee_position_id',current_user_position()->id)->exists()) 
-                    selected 
-                  @endif>نفسي - {{ current_user_position()->name }}</option>
+                <option value="{{ current_user_position()->id }}">
+                  نفسي - {{ current_user_position()->name }}
+                </option>
                 @foreach ($all_employees as $employee)
                 @if($employee->user && $employee->id != current_user_position()->id)
-                
-                <option value="{{$employee->id}}" class="employee-option" 
-                  @if(\App\Models\TaskUserAssignment::where('task_id', $tasko->id)->where('employee_position_id', $employee->id)->exists()) 
-                    selected 
-                  @endif>
+                <option value="{{$employee->id}}" class="employee-option">
                   {{$employee->name}} - {{$employee->user->name}}
                 </option>
                 @endif
