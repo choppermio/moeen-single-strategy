@@ -52,9 +52,10 @@ $employee_positions = EmployeePosition::whereNotIn('id', [9999])->get();
 $employee_scores = [];
 
 foreach ($employee_positions as $employee_position) {
+
     // Fetch all subtasks related to this employee
 
-     $subtasks = Subtask::where('user_id', $employee_position->id)
+    $subtasks = Subtask::where('user_id', $employee_position->id)
         ->whereBetween('created_at', [Carbon::now()->firstOfQuarter(), Carbon::now()])
         ->get();
     $total_subtasks = $subtasks->count();

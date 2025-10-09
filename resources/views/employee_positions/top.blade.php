@@ -45,7 +45,14 @@
                     <th scope="row">{{ $index + 1 }}</th>
                     <td>{{ $employee['employee_position']->user->name }}</td>
                     <td>{{ $employee['employee_position']->name }}</td>
-                    <td>{{ number_format($employee['percentage'], 2) }}%</td>
+                    <td>
+                        @if ($employee['total_subtasks'] > 0)
+                            {{ number_format(($employee['total_completed_subtasks'] / $employee['total_subtasks']) * 100, 2) }}%
+                        @else
+                            0%
+                        @endif
+                    </td>
+                    <!-- <td>{{ number_format($employee['percentage'], 2) }}%</td> -->
                     <td>{{ $employee['total_subtasks'] }}</td>
                     <td>{{ $employee['total_completed_subtasks'] }}</td>
                 </tr>
