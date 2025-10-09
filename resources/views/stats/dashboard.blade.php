@@ -131,14 +131,14 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">متوسط أداء كل إدارة</h6>
+                    <h6 class="m-0 font-weight-bold text-primary"> متوسط أداء كل إدارة او قسم</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="departmentTable" width="100%" cellspacing="0">
                             <thead>
                                 <tr>
-                                    <th>اسم الإدارة</th>
+                                    <th>اسم الإدارة/القسم</th>
                                     <th>متوسط الأداء</th>
                                     <th>عدد الموظفين</th>
                                     <th>المهام المكتملة</th>

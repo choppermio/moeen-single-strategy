@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Task;
-use App\Models\Todo;
 use App\Models\Subtask;
 use App\Models\Mubadara;
 use App\Models\Moashermkmf;
@@ -414,6 +413,8 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
 
     //create post route for this method changeTask in subtaskcontroller
     Route::post('/change-task', [SubtaskController::class, 'changeTask'])->name('subtask.changeTask');
+    // AJAX route: update subtask percentage
+    Route::post('/subtask/update-percentage', [SubtaskController::class, 'updatePercentage'])->name('subtask.updatePercentage');
     Route::post('/ticket-transitions', [TicketTransitionController::class, 'store']);
     
     Route::get('/', function () {

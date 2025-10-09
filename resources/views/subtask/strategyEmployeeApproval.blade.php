@@ -213,7 +213,15 @@ $user_id  = auth()->user()->id;
                             
                          
                           
-                            <td>{{ $subtask->percentage }} %</td>
+                            <td class="subtask-percentage-cell" data-subtask-id="{{ $subtask->id }}">
+                                <span class="percentage-display">{{ $subtask->percentage }} %</span>
+                                <a href="#" class="ml-2 edit-percentage" title="تعديل النسبة"><i class="fas fa-edit"></i></a>
+                                <div class="percentage-edit" style="display:none;">
+                                    <input type="number" class="form-control form-control-sm percentage-input" min="0" max="100" value="{{ $subtask->percentage }}" style="width:80px;display:inline-block;" />
+                                    <button class="btn btn-sm btn-primary save-percentage">حفظ</button>
+                                    <button class="btn btn-sm btn-secondary cancel-percentage">إلغاء</button>
+                                </div>
+                            </td>
                             <td><a href="{{ url(env('APP_URL_REAL') . '/mysubtasks-evidence/' . $subtask->id) }}" class="btn btn-info" target="_blank">الشواهد</a></td>
                             <td>{{ $task->output }}</td>
 
@@ -691,6 +699,67 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
 
 <script>
 $(document).ready(function() {
+// Inline percentage edit handler
+$(document).ready(function(){
+    // Show edit inputs
+    $(document).on('click', '.edit-percentage', function(e){
+        e.preventDefault();
+        var cell = $(this).closest('.subtask-percentage-cell');
+        cell.find('.percentage-display, .edit-percentage').hide();
+        cell.find('.percentage-edit').show();
+    });
+
+    // Cancel
+    $(document).on('click', '.cancel-percentage', function(e){
+        e.preventDefault();
+        var cell = $(this).closest('.subtask-percentage-cell');
+        cell.find('.percentage-edit').hide();
+        cell.find('.percentage-display, .edit-percentage').show();
+    });
+
+    // Save
+    $(document).on('click', '.save-percentage', function(e){
+        e.preventDefault();
+        var cell = $(this).closest('.subtask-percentage-cell');
+        var subtaskId = cell.data('subtask-id');
+        var input = cell.find('.percentage-input');
+        var newVal = parseInt(input.val());
+        if (isNaN(newVal) || newVal < 0 || newVal > 100) {
+            alert('القيمة يجب أن تكون بين 0 و 100');
+            return;
+        }
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('جارٍ الحفظ...');
+
+        var token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').first().val();
+
+        $.ajax({
+            url: '{{ route('subtask.updatePercentage') }}',
+            method: 'POST',
+            data: {
+                _token: token,
+                subtask_id: subtaskId,
+                percentage: newVal
+            },
+            success: function(resp){
+                if(resp.success){
+                    cell.find('.percentage-display').text(resp.percentage + ' %');
+                    cell.find('.percentage-edit').hide();
+                    cell.find('.percentage-display, .edit-percentage').show();
+                } else {
+                    alert(resp.message || 'حدث خطأ');
+                }
+            },
+            error: function(xhr){
+                alert('حدث خطأ في الخادم');
+            },
+            complete: function(){
+                $btn.prop('disabled', false).text('حفظ');
+            }
+        });
+    });
+});
     $('.approvedform').on('submit', function(e) {
         e.preventDefault();
 

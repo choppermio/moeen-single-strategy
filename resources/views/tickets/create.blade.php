@@ -93,7 +93,9 @@
             background-color: red;
             color: white;
             padding: 2px 5px;
-        }        .filename {
+        }        
+        
+        .filename {
             margin-left: 10px;
             font-size: 0.9em;
             color: #666;
@@ -226,7 +228,7 @@
 
     <div id="preview"></div>
     <input type="file" name="files[]" multiple>
-    <br />    <input type="submit" class="btn btn-primary mt-3" value="إنشاء التذكرة" />
+    <br />    <input type="submit" class="btn btn-primary mt-3" name="submito" value="إنشاء التذكرة" />
 </form>
 
 <!-- Loading Screen -->
@@ -422,7 +424,7 @@ formData.append('to_id', selectedValues);
                             var form = document.getElementById('fileUploadForm');
                             var elements = form.elements;
                             for (var i = 0, len = elements.length; i < len; ++i) {
-                                if (elements[i].name !== "to_id[]") {
+                                if (elements[i].name !== "to_id[]" || elements[i].name=="submito") {
                                     elements[i].value = "";
                                 }
                             }

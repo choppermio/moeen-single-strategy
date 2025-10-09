@@ -1323,4 +1323,41 @@ if ($mediaItem) {
         $ticket->save();
         return true;
     }
+
+    /**
+     * Update subtask percentage via AJAX
+     */
+    public function updatePercentage(Request $request)
+    {
+        $subtaskId = $request->input('subtask_id');
+        $percentage = $request->input('percentage');
+
+        if (!$subtaskId || !is_numeric($percentage)) {
+            return response()->json(['success' => false, 'message' => 'Invalid parameters'], 400);
+        }
+
+        $percentage = (int)$percentage;
+        if ($percentage < 0) $percentage = 0;
+        if ($percentage > 100) $percentage = 100;
+
+        $subtask = Subtask::find($subtaskId);
+        if (!$subtask) {
+            return response()->json(['success' => false, 'message' => 'Subtask not found'], 404);
+        }
+
+        try {
+            $subtask->percentage = $percentage;
+            $subtask->save();
+
+            // Recalculate any aggregate percentages if you have such function
+            if (function_exists('calculatePercentages')) {
+                calculatePercentages();
+            }
+
+            return response()->json(['success' => true, 'percentage' => $subtask->percentage]);
+        } catch (\Exception $e) {
+            Log::error('updatePercentage error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
+        }
+    }
 }
