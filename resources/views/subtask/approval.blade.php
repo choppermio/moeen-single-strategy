@@ -31,7 +31,7 @@ $user_id  = auth()->user()->id;
     <table class="table table-bordered" id="approvalTable">
         <thead>
             <tr>
-                
+                <th>#</th>
                 <th>المهمة</th>
                 <th>المرفقات</th>
                 <th>الملاحظات</th>
@@ -64,7 +64,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
             @endphp
 
 
-
+                <td>{{ $subtask->ticket_id }}</td>
                 <td>{{ $subtask->name }}
                     <div>     <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span><br />
                          <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>

@@ -1079,7 +1079,7 @@ public function subtaskattachment(Subtask $subtask, Request $request)
             
         }else{
             $subtask = Subtask::find($request->input('taskid'));
-            $subtask->notes = '';
+           // $subtask->notes = '';
         $subtask->done = $request->input('task_status');
         $subtask->status = 'strategy-pending-approval';
 
