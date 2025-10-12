@@ -431,6 +431,10 @@ formData.append('to_id', selectedValues);
                         }
                         removeAllThumbs()
                         console.log('Files uploaded successfully:', response);
+                        setTimeout(() => {
+                            //reload the page
+                            window.location.reload();
+                        }, 3000);
                     },
                     error: function(xhr, status, error) {
                         // Hide loading screen on error
