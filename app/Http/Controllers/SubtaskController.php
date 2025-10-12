@@ -1078,7 +1078,7 @@ public function subtaskattachment(Subtask $subtask, Request $request)
 
             
         }else{
-            dd($request->all());
+//dd($request->all());
             $subtask = Subtask::find($request->input('taskid'));
            // $subtask->notes = '';
         $subtask->done = $request->input('task_status');
