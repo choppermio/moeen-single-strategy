@@ -415,6 +415,8 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
     Route::post('/change-task', [SubtaskController::class, 'changeTask'])->name('subtask.changeTask');
     // AJAX route: update subtask percentage
     Route::post('/subtask/update-percentage', [SubtaskController::class, 'updatePercentage'])->name('subtask.updatePercentage');
+    // AJAX bulk approve route
+    Route::post('/subtask/bulk-statusstrategy', [SubtaskController::class, 'bulkStatusStrategy'])->name('subtask.bulkStatusStrategy');
     Route::post('/ticket-transitions', [TicketTransitionController::class, 'store']);
     
     Route::get('/', function () {

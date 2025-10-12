@@ -1396,4 +1396,66 @@ if ($mediaItem) {
             return response()->json(['success' => false, 'message' => 'Server error'], 500);
         }
     }
+
+    /**
+     * Bulk approve/reject subtasks (used by AJAX bulk action)
+     */
+    public function bulkStatusStrategy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $status = $request->input('status', 'approved');
+
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json(['success' => false, 'message' => 'No subtasks selected'], 400);
+        }
+
+        try {
+            $updated = [];
+            foreach ($ids as $id) {
+                $subtask = Subtask::find($id);
+                if (!$subtask) continue;
+
+                if ($status === 'approved') {
+                    $subtask->status = 'approved';
+                    $subtask->done = 1;
+                    $subtask->finished_user_id = $subtask->user_id;
+                    $subtask->save();
+
+                    // add ticket transition if ticket exists
+                    if ($subtask->ticket_id) {
+                        TicketTransition::create([
+                            'ticket_id' => $subtask->ticket_id,
+                            'from_state' => 001,
+                            'to_state' => $subtask->user_id,
+                            'date' => date('Y-m-d H:i:s'),
+                            'status' => 'strategy-approved',
+                        ]);
+                    }
+                } elseif ($status === 'rejected') {
+                    $subtask->status = 'rejected';
+                    $subtask->percentage = 0;
+                    $subtask->save();
+
+                    if ($subtask->ticket_id) {
+                        TicketTransition::create([
+                            'ticket_id' => $subtask->ticket_id,
+                            'from_state' => 001,
+                            'to_state' => $subtask->user_id,
+                            'date' => date('Y-m-d H:i:s'),
+                            'status' => 'strategy-rejected',
+                        ]);
+                    }
+                }
+
+                $updated[] = $subtask->id;
+            }
+
+            calculatePercentages();
+
+            return response()->json(['success' => true, 'updated' => $updated]);
+        } catch (\Exception $e) {
+            Log::error('bulkStatusStrategy error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
+        }
+    }
 }

@@ -156,9 +156,16 @@ $user_id  = auth()->user()->id;
     <div class="tab-content" id="subtaskTabsContent">
         <!-- Pending Tab -->
         <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+            <div class="d-flex justify-content-between mb-2">
+                <div></div>
+                <div>
+                    <button id="bulkApproveBtn" class="btn btn-success btn-sm">اعتماد المحدد</button>
+                </div>
+            </div>
             <table class="table table-bordered" id="datatable">
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="select-all" /></th>
                         <th>#</th>
                         <th>المهمة</th>
                         <th>مسؤول المهمة</th>
@@ -181,7 +188,8 @@ $user_id  = auth()->user()->id;
                                 $mubadara_info = \App\Models\Mubadara::where('id', $task->parent_id)->first();
                             
                         @endphp
-                        <tr class="aa{{ $subtask->id }}">
+                        <tr class="aa{{ $subtask->id }}" data-subtask-id="{{ $subtask->id }}">
+                            <td><input type="checkbox" class="select-subtask" value="{{ $subtask->id }}" /></td>
                             <td>{{ $subtask->ticket_id }}</td>
                             <td>{{ $subtask->name }}
                 
@@ -792,6 +800,7 @@ $(document).ready(function(){
                         row.find('span.badge-info').remove();
                         row.find('td').eq(1).append(badgeHtml);
                     }
+                    alert('تم تحديث الاجراء');
                 } else {
                     alert(resp.message || 'حدث خطأ أثناء تحديث المهمة');
                 }
@@ -837,6 +846,51 @@ function setRejectTaskId(taskId, taskName) {
     $('#rejectTaskId').val(taskId);
     $('#rejectTaskName').text(taskName);
 }
+</script>
+<script>
+    // Bulk select / approve handlers
+    $(document).ready(function(){
+        $('#select-all').on('change', function(){
+            var checked = $(this).is(':checked');
+            $('.select-subtask').prop('checked', checked);
+        });
+
+        $('#bulkApproveBtn').on('click', function(e){
+            e.preventDefault();
+            var ids = $('.select-subtask:checked').map(function(){ return $(this).val(); }).get();
+            if(ids.length === 0){
+                alert('يرجى اختيار مهام للموافقة عليها');
+                return;
+            }
+
+            if(!confirm('هل أنت متأكد من اعتماد المهام المحددة؟')) return;
+
+            var token = $('meta[name="csrf-token"]').attr('content') || $('input[name="_token"]').first().val();
+
+            $.ajax({
+                url: '{{ route('subtask.bulkStatusStrategy') }}',
+                method: 'POST',
+                data: {
+                    _token: token,
+                    ids: ids,
+                    status: 'approved'
+                },
+                success: function(resp){
+                    if(resp.success){
+                        resp.updated.forEach(function(id){
+                            $('.aa' + id).fadeOut();
+                        });
+                        alert('تم اعتماد ' + resp.updated.length + ' مهمة');
+                    } else {
+                        alert(resp.message || 'حدث خطأ');
+                    }
+                },
+                error: function(xhr){
+                    alert('خطأ في الخادم');
+                }
+            });
+        });
+    });
 </script>
 <script>
     $(document).ready(function() {
