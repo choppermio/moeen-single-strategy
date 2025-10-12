@@ -433,8 +433,8 @@ formData.append('to_id', selectedValues);
                         console.log('Files uploaded successfully:', response);
                         setTimeout(() => {
                             //reload the page
-                            window.location.reload();
-                        }, 3000);
+                            $('input[name="submito"]').val('إنشاء التذكرة');
+                        }, 2000);
                     },
                     error: function(xhr, status, error) {
                         // Hide loading screen on error
