@@ -1314,14 +1314,50 @@ if ($mediaItem) {
     //create method that change the task_id in subtask model and then change the task_id in ticket model where id = subtask ticket_id
     public function changeTask(Request $request)
     {
-        $subtask = Subtask::find($request->input('subtask_id'));
-        $subtask->parent_id = $request->input('task_id');
-        $subtask->save();
-        //change the task_id in ticket model where id = subtask ticket_id
-        $ticket = Ticket::find($subtask->ticket_id);
-        $ticket->task_id = $request->input('task_id');
-        $ticket->save();
-        return true;
+        $subtaskId = $request->input('subtask_id');
+        $taskId = $request->input('task_id');
+
+        if (!$subtaskId || !$taskId) {
+            return response()->json(['success' => false, 'message' => 'Missing parameters'], 400);
+        }
+
+        $subtask = Subtask::find($subtaskId);
+        if (!$subtask) {
+            return response()->json(['success' => false, 'message' => 'Subtask not found'], 404);
+        }
+
+        try {
+            $subtask->parent_id = $taskId;
+            $subtask->save();
+
+            // change the task_id in ticket model where id = subtask ticket_id
+            if ($subtask->ticket_id) {
+                $ticket = Ticket::find($subtask->ticket_id);
+                if ($ticket) {
+                    $ticket->task_id = $taskId;
+                    $ticket->save();
+                }
+            }
+
+            // return updated task info so the UI can update without reload
+            $task = Task::find($taskId);
+            $taskName = $task ? $task->name : null;
+            $taskOwnerName = null;
+            if ($task && $task->user_id) {
+                $owner = EmployeePosition::where('id', $task->user_id)->first();
+                $taskOwnerName = $owner ? $owner->name : null;
+            }
+
+            return response()->json([
+                'success' => true,
+                'task_id' => $taskId,
+                'task_name' => $taskName,
+                'task_owner_name' => $taskOwnerName,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('changeTask error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server error'], 500);
+        }
     }
 
     /**

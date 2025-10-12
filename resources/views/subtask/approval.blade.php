@@ -25,16 +25,20 @@ $user_id  = auth()->user()->id;
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <!--fontawesome cdn-->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
-<div class="container">
+<div class="container-fluid">
     <x-page-heading :title="'الموافقة على المهام'"  />
 
-    <table class="table table-bordered">
+    <table class="table table-bordered" id="approvalTable">
         <thead>
             <tr>
                 
                 <th>المهمة</th>
+                <th>المرفقات</th>
+                <th>الملاحظات</th>
+                <th>مرسلة من</th>
                 <th>نسبة الإكتمال</th>
                 <th>الشواهد</th>
+                <th>التحديثات</th>
                 <th>الإجراء</th>
             </tr>
         </thead>
@@ -67,8 +71,104 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                      </div>
                      
                      </td>
+                     
+                 <td>
+                        @php
+                            // Get the ticket related to this subtask
+                            $ticket = \App\Models\Ticket::where('id', $subtask->ticket_id)->first();
+                            $baseUrl = env('APP_URL_REAL');
+                        @endphp
+
+                        @if($ticket && $ticket->images)
+                            @foreach ($ticket->images as $image)
+                                @php
+                                    // Remove "public/" from the filepath since storage link maps /storage to /storage/app/public
+                                    $cleanPath = str_replace('public/', '', $image->filepath);
+                                    $newFilePath = $baseUrl . "/storage/" . $cleanPath;
+                                @endphp
+                                <!-- Attachment icon with tooltip and modal trigger -->
+                                <a href="#" 
+                                    class="attachment-icon" 
+                                    data-toggle="modal" 
+                                    data-target="#attachmentModal{{ $subtask->id }}" 
+                                    title="عرض المرفقات">
+                                     <i class="fas fa-paperclip"></i>
+                                </a>
+
+                                <!-- Modal for showing attachment names and links -->
+                                <div class="modal fade" id="attachmentModal{{ $subtask->id }}" tabindex="-1" role="dialog" aria-labelledby="attachmentModalLabel{{ $subtask->id }}" aria-hidden="true">
+                                     <div class="modal-dialog" role="document">
+                                          <div class="modal-content">
+                                                <div class="modal-header">
+                                                     <h5 class="modal-title" id="attachmentModalLabel{{ $subtask->id }}">المرفقات</h5>
+                                                     <button type="button" class="close" data-dismiss="modal" aria-label="إغلاق">
+                                                          <span aria-hidden="true">&times;</span>
+                                                     </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                     <ul>
+                                                          @foreach ($ticket->images as $img)
+                                                                @php
+                                                                     $cleanPath = str_replace('public/', '', $img->filepath);
+                                                                     $fileUrl = $baseUrl . "/storage/" . $cleanPath;
+                                                                @endphp
+                                                                <li>
+                                                                     <a href="{{ $fileUrl }}" target="_blank">{{ $img->filename }}</a>
+                                                                </li>
+                                                          @endforeach
+                                                     </ul>
+                                                </div>
+                                          </div>
+                                     </div>
+                                </div>
+                            @endforeach
+                        @endif
+                    </td>
+
+                     
+                         <td>@php
+    $uniqueId = uniqid();
+@endphp
+<div style="width:200px;">
+    <div id="shortNote_{{ $uniqueId }}" class="collapse show">
+        {{ Str::limit($ticket && $ticket->note ? $ticket->note : '', 30) }}
+        @if($ticket && strlen($ticket->note) > 30)
+            <a href="#" data-toggle="collapse" data-target="#shortNote_{{ $uniqueId }},#fullNote_{{ $uniqueId }}">قراءة المزيد</a>
+        @endif
+    </div>
+    <div id="fullNote_{{ $uniqueId }}" class="collapse">
+        {{ $ticket && $ticket->note ? $ticket->note : '' }}
+        <a href="#" data-toggle="collapse" data-target="#shortNote_{{ $uniqueId }},#fullNote_{{ $uniqueId }}">قراءة أقل</a>
+    </div>
+</div></td>
+                     <td>
+                     
+                        @php
+                        $ticket = \App\Models\Ticket::where('id', $subtask->ticket_id)->first();
+                        if ($ticket) {
+                            $from_user = $ticket->from_id;
+                          
+                            $employee_position = \App\Models\EmployeePosition::where('id', $from_user)->first();
+                            if ($employee_position) {
+                                echo $employee_position->name . ' - ' . $employee_position->user->name;
+                            }
+                        }
+                        @endphp
+                     </td>
                 <td>{{ $subtask->percentage }} %</td>
                 <td> <a href="{{ url(env('APP_URL_REAL').'/mysubtasks-evidence/'.$subtask->id) }}" class="btn btn-info" target="_blank">الشواهد</a></td>
+                                <td>
+                                    @php
+                                        // Get the ticket related to this subtask
+                                        $sent_ticket = \App\Models\Ticket::where('id', $subtask->ticket_id)->first();
+                                    @endphp
+                                    @if($sent_ticket)
+                                        <a href="{{ env('APP_URL_REAL') }}/ticketsshow/{{ $sent_ticket->id }}" target="_blank">عرض</a>
+                                    @else
+                                        <span class="text-muted">لا يوجد تذكرة</span>
+                                    @endif
+                                </td>
+
                 <td>
                    
                     @if($admin ==1)
@@ -76,16 +176,9 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                         <i class="fas fa-check"></i>
                     </button>
 
-                    <form method="post" action="{{route('subtask.status')}}" class="d-inline">
-                        @csrf
-                        <input type="hidden" name="taskid" value="{{ $subtask->id }}"/>
-                        <input type="hidden" name="status" value="rejected"/>
-                        <button type="submit" class="btn btn-danger btn-sm">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <textarea name="notes" class="form-control" placeholder="سبب الرفض" required></textarea>
-
-                    </form>
+                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#rejectModal" onclick="setRejectTaskId({{ $subtask->id }}, {!! json_encode($subtask->name) !!})">
+                        <i class="fas fa-times"></i>
+                    </button>
                     @else
                     <form method="post" action="{{ route('subtask.attachment') }}" enctype="multipart/form-data">
                         @csrf
@@ -143,11 +236,41 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
     </div>
 </div>
 
+        <!-- Modal for rejection (used by reject button) -->
+        <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="rejectModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <form method="post" action="{{ route('subtask.status') }}" id="rejectFormModal">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="rejectModalLabel">رفض المهمة</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" name="taskid" id="rejectTaskIdModal" />
+                            <input type="hidden" name="status" value="rejected" />
+                            <div class="mb-3">
+                                <h6 class="text-muted">المهمة: <span id="rejectTaskNameModal"></span></h6>
+                            </div>
+                            <div class="form-group">
+                                <label for="rejectNotesModal">سبب الرفض <span class="text-danger">*</span></label>
+                                <textarea name="notes" id="rejectNotesModal" class="form-control" rows="4" placeholder="يرجى كتابة سبب الرفض..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+                            <button type="submit" class="btn btn-danger">رفض المهمة</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- DataTables assets are loaded in the layout; initialization is pushed to the scripts stack below -->
 
 
 
@@ -228,4 +351,67 @@ $('span').click(function(){
    // $(this).children('li').toggle();
 });
 </script>
+<script>
+// Set task id and name in reject modal
+function setRejectTaskId(id, name){
+    $('#rejectTaskIdModal').val(id);
+    $('#rejectTaskNameModal').text(name);
+}
+
+// Handle modal reject form submission via AJAX to avoid reload
+$(document).on('submit', '#rejectFormModal', function(e){
+    e.preventDefault();
+    var form = $(this);
+    var btn = form.find('button[type="submit"]');
+    var original = btn.html();
+    btn.prop('disabled', true).html('جاري الارسال...');
+
+    $.ajax({
+        url: form.attr('action'),
+        method: 'POST',
+        data: form.serialize(),
+        success: function(resp){
+            // hide the row
+            var id = $('#rejectTaskIdModal').val();
+            $('.aa' + id).fadeOut();
+            $('#rejectModal').modal('hide');
+            $('#rejectNotesModal').val('');
+        },
+        error: function(xhr){
+            alert('حدث خطأ أثناء إرسال الطلب');
+        },
+        complete: function(){
+            btn.prop('disabled', false).html(original);
+        }
+    });
+});
+</script>
+@push('scripts')
+<script>
+    (function(){
+        // Initialize DataTable after layout scripts (jQuery/DataTables) are loaded
+        try{
+            console.log('approvalTable init. jQuery:', typeof $ === 'function' ? $.fn.jquery : 'n/a', 'DataTable present:', !!($.fn && $.fn.DataTable));
+            if ($.fn && $.fn.DataTable) {
+                $('#approvalTable').DataTable({
+                    paging: true,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    responsive: true,
+                    pageLength: 25,
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json'
+                    }
+                });
+                console.log('DataTable initialized on #approvalTable');
+            } else {
+                console.error('DataTables plugin not loaded when initializing approvalTable.');
+            }
+        } catch (e) {
+            console.error('Error initializing approvalTable DataTable:', e);
+        }
+    })();
+</script>
+@endpush
 @endsection

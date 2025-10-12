@@ -410,37 +410,24 @@ $user_id  = auth()->user()->id;
     
     
                             <td>
-            <form action="/" method="POST">
+            <form action="{{ route('subtask.changeTask') }}" method="POST" class="ajax-change-task">
+                @csrf
                 <input type="hidden" name="subtask_id" value="{{ $subtask->id }}">
-                {{$task->user_id}}
-                 @php
-                         $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $task->user_id)->pluck('task_id');
-        
-        // Also get tasks that are directly assigned (for backward compatibility)
-        $directlyAssignedTasks = \App\Models\Task::where('user_id', $task->user_id)->pluck('id');
-        
-        // Merge both collections and get unique task IDs
-        $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
-        
-        // Get the actual task objects
-        $tasks = \App\Models\Task::whereIn('id', $allTaskIds)->get();
-    
-       
-                    @endphp
-                <select>
-                   @php
-                  
-        foreach ($tasks as $taskon) {
-            echo     "<option "; 
-            if($taskon->id == $subtask->parent_id) echo 'selected';
-            echo " value=\"{$taskon->id}\">{$taskon->name}</option>";
-        }
-        
-                   @endphp
-                
-                </select>
-                <button type="submit" class="btn btn-primary">إجراء</button>
+                @php
+                    $taskIds = \App\Models\TaskUserAssignment::where('employee_position_id', $task->user_id)
+                        ->where('type', 'task')
+                        ->pluck('task_id');
 
+                    $directlyAssignedTasks = \App\Models\Task::where('user_id', $task->user_id)->pluck('id');
+                    $allTaskIds = $taskIds->merge($directlyAssignedTasks)->unique();
+                    $tasks = \App\Models\Task::whereIn('id', $allTaskIds)->get();
+                @endphp
+                <select name="task_id" class="form-control form-control-sm d-inline" style="width:auto;display:inline-block;">
+                    @foreach($tasks as $taskon)
+                        <option value="{{ $taskon->id }}" @if($taskon->id == $subtask->parent_id) selected @endif>{{ $taskon->name }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">إجراء</button>
             </form>
 
         </td>
@@ -777,6 +764,43 @@ $(document).ready(function(){
             },
             error: function(xhr, status, error) {
                 console.error('AJAX Error:', status, error);
+            }
+        });
+    });
+
+    // AJAX handler for changing parent task (transfer)
+    $(document).on('submit', 'form.ajax-change-task', function(e){
+        e.preventDefault();
+        var form = $(this);
+        var btn = form.find('button[type="submit"]');
+        var originalHtml = btn.html();
+        btn.prop('disabled', true).html('جاري الحفظ...');
+
+        $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            success: function(resp){
+                if(resp && resp.success){
+                    // update the task badge (الإجراء الرئيسي) in the same row
+                    var row = form.closest('tr');
+                    var badgeHtml = '';
+                    if(resp.task_name){
+                        var owner = resp.task_owner_name ? ' (' + resp.task_owner_name + ')' : '';
+                        badgeHtml = '<span class="badge badge-info">الإجراء الرئيسي : ' + resp.task_name + owner + '</span>';
+                        // replace existing badge(s)
+                        row.find('span.badge-info').remove();
+                        row.find('td').eq(1).append(badgeHtml);
+                    }
+                } else {
+                    alert(resp.message || 'حدث خطأ أثناء تحديث المهمة');
+                }
+            },
+            error: function(xhr){
+                alert('خطأ في الخادم');
+            },
+            complete: function(){
+                btn.prop('disabled', false).html(originalHtml);
             }
         });
     });
