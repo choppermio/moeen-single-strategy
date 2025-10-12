@@ -212,6 +212,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                         <h2 class="form-label taskname"></label>
                     </div>
                     <div class="mb-3">
+                        
                         <label for="taskStatus" class="form-label">الحالة</label>
                         <input type="range" id="pi_input" name="percentage2" min="0" max="100" value="0" step="10" />
                         <input type="hidden" id="pi_input2" name="percentage" min="0" max="100" value="0" step="10" />
@@ -222,7 +223,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                             <option value="2">مكتمل بشكل جزئي</option>
                             <option value="1">مكتمل</option>
                         </select>
-<input type="hidden" name="taskid"/>
+<input type="hidden" name="taskid" value="{{ $subtask->id }}" />
 
                     </div>
                 
@@ -274,7 +275,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
 
 
 
-
+                        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
 
