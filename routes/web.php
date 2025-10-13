@@ -33,6 +33,7 @@ use App\Http\Controllers\EmployeePositionRelationController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+    Route::get('/subtask/overdue-public', [SubtaskController::class, 'overdue'])->name('subtask.overdue.public');
 
 // Test email route to check SMTP configuration
 Route::get('/test-email', function () {
@@ -432,11 +433,11 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
 Route::get('/ticketsshow/{id}', [TicketController::class, 'showwithmessages'])->name('tickets.showwithmessages');
 Route::post('/tickets/{id}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store');
 Route::get('/ticket/ticketFilter', [TicketController::class, 'ticketfilter'])->name('tickets.filter');
-    Route::delete('/ticketdelete/{id}', [TicketController::class, 'deleteTicket']);
+    // Route::delete('/ticketdelete/{id}', [TicketController::class, 'deleteTicket']);
 
 // Admin ticket routes (only accessible by ADMIN_ID users)
 Route::get('/admin/tickets', [TicketController::class, 'adminIndex'])->name('tickets.admin.index');
-Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit');
+// Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit');
 Route::put('/admin/tickets/{id}', [TicketController::class, 'adminUpdate'])->name('tickets.admin.update');
 Route::delete('/admin/tickets/{id}', [TicketController::class, 'adminDestroy'])->name('tickets.admin.destroy');
 Route::delete('/admin/tickets/{id}/remove-file', [TicketController::class, 'adminRemoveFile'])->name('tickets.admin.removeFile');
@@ -457,6 +458,9 @@ Route::post('/upload-files-update/{modelType}/{modelId}', [ImageUploadController
 Route::post('/subtask-status', [SubtaskController::class, 'status'])->name('subtask.status');
 Route::get('/subtask-analyst', [SubtaskController::class, 'analyst'])->name('subtask.analyst');
 Route::post('/statusstrategy', [SubtaskController::class, 'statusstrategy'])->name('subtask.statusstrategy');
+    // Overdue subtasks for admin
+    Route::get('/subtask/overdue', [SubtaskController::class, 'overdue'])->name('subtask.overdue');
+    // Temporary public route for debugging (no auth) - remove after verification
 Route::get('mysubtasks', [SubtaskController::class, 'mysubtasks'])->name('subtask.mysubtasks');
 Route::get('mysubtaskscalendar', [SubtaskController::class, 'mysubtaskscalendar'])->name('subtask.mysubtaskscalendar');
 Route::get('addtomysubtasks', [SubtaskController::class, 'add'])->name('subtask.add');

@@ -306,7 +306,7 @@ echo $newFilePath;
 
     @endphp
     @if(current_user_position()->id == $sent_ticket->from_id && $sstatus != 'approved')
-        <a href="{{ url('/tickets/' . $sent_ticket->id . '/edit') }}" class="btn btn-primary mr-2">
+        <!-- <a href="{{ url('/tickets/' . $sent_ticket->id . '/edit') }}" class="btn btn-primary mr-2">
             <i class="fas fa-edit"></i>
         </a>
 
@@ -318,7 +318,7 @@ echo $newFilePath;
             <button type="submit" class="btn btn-danger">
                 <i class="fas fa-trash-alt"></i>
             </button>
-        </form>
+        </form> -->
     @endif
 </div>
 

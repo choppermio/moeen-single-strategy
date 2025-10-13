@@ -171,7 +171,7 @@ class StatsController extends Controller
     private function getOverdueTasks($startDate = null, $endDate = null)
     {
         // Build query with date filter if provided
-        $query = Subtask::whereColumn('due_time', '<', 'done_time');
+        $query = Subtask::where('due_time', '<', now())->where('status', '!=', 'approved');
         
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate, $endDate]);

@@ -1459,4 +1459,25 @@ if ($mediaItem) {
             return response()->json(['success' => false, 'message' => 'Server error'], 500);
         }
     }
+
+    /**
+     * Show overdue subtasks (due_time passed and not approved)
+     */
+    public function overdue(Request $request)
+    {
+        // Only allow authenticated users (routes are in auth group)
+        $query = Subtask::query();
+
+        $query->where(function($q){
+            $q->where('status', '!=', 'approved')
+              ->orWhereNull('status');
+        });
+
+        $query->where('due_time', '<', now())
+              ->orderBy('due_time', 'asc');
+
+        $subtasks = $query->get();
+
+        return view('subtask.overdue', compact('subtasks'));
+    }
 }
