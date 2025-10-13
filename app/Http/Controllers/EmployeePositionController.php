@@ -55,9 +55,7 @@ foreach ($employee_positions as $employee_position) {
 
     // Fetch all subtasks related to this employee
 
-    $subtasks = Subtask::where('user_id', $employee_position->id)
-        ->whereBetween('created_at', [Carbon::now()->firstOfQuarter(), Carbon::now()])
-        ->get();
+    $subtasks = Subtask::where('user_id', $employee_position->id)->get();
     $total_subtasks = $subtasks->count();
     $total_completed_subtasks = $subtasks->where('percentage', 100)->count();
     $points = 0;
