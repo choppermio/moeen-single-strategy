@@ -437,7 +437,7 @@ Route::get('/ticket/ticketFilter', [TicketController::class, 'ticketfilter'])->n
 
 // Admin ticket routes (only accessible by ADMIN_ID users)
 Route::get('/admin/tickets', [TicketController::class, 'adminIndex'])->name('tickets.admin.index');
-// Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit');
+Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit');
 Route::put('/admin/tickets/{id}', [TicketController::class, 'adminUpdate'])->name('tickets.admin.update');
 Route::delete('/admin/tickets/{id}', [TicketController::class, 'adminDestroy'])->name('tickets.admin.destroy');
 Route::delete('/admin/tickets/{id}/remove-file', [TicketController::class, 'adminRemoveFile'])->name('tickets.admin.removeFile');
