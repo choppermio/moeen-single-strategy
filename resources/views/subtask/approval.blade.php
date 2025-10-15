@@ -48,14 +48,22 @@ $user_id  = auth()->user()->id;
 $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                     ->where('percentage', '!=', 100)
                     ->whereIn('status', ['pending-approval'])
-                    ->get();          
-
-                    // dd($subtasks);
-                    
-                    
+                    ->get(); 
                     @endphp
+                    @if($subtasks->count() == 0)
+                    <tr>
+                        <td colspan="9" class="text-center">لا توجد مهام للموافقة عليها.</td>
+                    </tr>
+                    @endif
+                             
+
+                  
+                    
+                    
+
+                     @if($subtasks->count() > 0)
             @foreach ($subtasks as $subtask)
-            <tr>
+            <tr data-subtask-id="{{ $subtask->id }}" id="subtask-row-{{ $subtask->id }}">
                 @php
                 $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                 
@@ -176,7 +184,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                         <i class="fas fa-check"></i>
                     </button>
 
-                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#rejectModal" onclick="setRejectTaskId({{ $subtask->id }}, {!! json_encode($subtask->name) !!})">
+                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#rejectModal" data-taskid="{{ $subtask->id }}" data-taskname="{{ $subtask->name }}">
                         <i class="fas fa-times"></i>
                     </button>
                     @else
@@ -191,6 +199,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                 </td>
             </tr>
             @endforeach
+            @endif
         </tbody>
     </table>
 </div>
@@ -223,7 +232,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                             <option value="2">مكتمل بشكل جزئي</option>
                             <option value="1">مكتمل</option>
                         </select>
-<input type="hidden" name="taskid" value="{{ $subtask->id }}" />
+<input type="hidden" name="taskid" value="{{ $subtask->id ?? '' }}" />
 
                     </div>
                 
@@ -352,14 +361,17 @@ $('span').click(function(){
    // $(this).children('li').toggle();
 });
 </script>
+
+@push('scripts')
 <script>
-// Set task id and name in reject modal
+// Consolidated reject-modal handlers — run after layout loads jQuery/Bootstrap
 function setRejectTaskId(id, name){
     $('#rejectTaskIdModal').val(id);
     $('#rejectTaskNameModal').text(name);
 }
 
-// Handle modal reject form submission via AJAX to avoid reload
+
+
 $(document).on('submit', '#rejectFormModal', function(e){
     e.preventDefault();
     var form = $(this);
@@ -367,26 +379,91 @@ $(document).on('submit', '#rejectFormModal', function(e){
     var original = btn.html();
     btn.prop('disabled', true).html('جاري الارسال...');
 
+    // Ensure task id is present (fallback to modal data or alternate input)
+    var tid = $('#rejectTaskIdModal').val();
+    if(!tid){
+        tid = $('#rejectModal').data('taskid') || $('#rejectTaskId').val();
+        if(tid){
+            $('#rejectTaskIdModal').val(tid);
+        }
+    }
+
+    console.log('Submitting reject form with data:', form.serialize());
+    console.log('Task ID:', tid);
+
     $.ajax({
         url: form.attr('action'),
         method: 'POST',
         data: form.serialize(),
         success: function(resp){
-            // hide the row
-            var id = $('#rejectTaskIdModal').val();
-            $('.aa' + id).fadeOut();
+            var id = $('#rejectTaskIdModal').val() || $('#rejectModal').data('taskid') || $('#rejectTaskId').val();
+            if(id){
+                // Remove the table row with smooth animation
+                $('#subtask-row-' + id).fadeOut(400, function(){
+                    $(this).remove();
+                    
+                    // If DataTable is initialized, also remove from DataTable
+                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#approvalTable')) {
+                        var table = $('#approvalTable').DataTable();
+                        table.row('#subtask-row-' + id).remove().draw(false);
+                    }
+                    
+                    // Check if table is now empty
+                    if($('#approvalTable tbody tr').length === 0){
+                        $('#approvalTable tbody').html('<tr><td colspan="9" class="text-center">لا توجد مهام للموافقة عليها.</td></tr>');
+                    }
+                });
+            }
             $('#rejectModal').modal('hide');
             $('#rejectNotesModal').val('');
         },
         error: function(xhr){
-            alert('حدث خطأ أثناء إرسال الطلب');
+            console.error('Reject request failed:', xhr);
+            var errorMsg = 'حدث خطأ أثناء إرسال الطلب';
+            if(xhr.responseJSON && xhr.responseJSON.message){
+                errorMsg += '\n' + xhr.responseJSON.message;
+            } else if(xhr.responseText){
+                console.log('Response:', xhr.responseText);
+            }
+            alert(errorMsg);
         },
         complete: function(){
             btn.prop('disabled', false).html(original);
         }
     });
 });
+
+// Populate reject modal when shown via data attributes
+$('#rejectModal').on('show.bs.modal', function(event){
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    var taskId = button.data('taskid');
+    var taskName = button.data('taskname');
+    if(taskId){
+        $('#rejectTaskIdModal').val(taskId);
+        $(this).data('taskid', taskId);
+    }
+    if(taskName){
+        $('#rejectTaskNameModal').text(taskName);
+    }
+});
+
+// Also handle direct clicks on any button that opens the reject modal (delegated)
+$(document).on('click', 'button[data-target="#rejectModal"]', function(){
+    var btn = $(this);
+    var id = btn.data('taskid') || btn.attr('taskid');
+    var name = btn.data('taskname') || btn.attr('taskname');
+    if(id){
+        $('#rejectTaskIdModal').val(id);
+        $('#rejectTaskId').val(id);
+        $('#rejectModal').data('taskid', id);
+    }
+    if(name){
+        $('#rejectTaskNameModal').text(name);
+        $('#rejectTaskName').text(name);
+    }
+});
 </script>
+@endpush
 @push('scripts')
 <script>
     (function(){
