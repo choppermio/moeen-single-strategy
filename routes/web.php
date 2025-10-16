@@ -375,6 +375,7 @@ Route::post('/debug-login/test-auth', function(Illuminate\Http\Request $request)
 });
 
 Route::post('/change-password', [PasswordController::class, 'store'])->name('password.update2');
+Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change')->middleware('auth');
 
 Route::group(['middleware' => 'checkUserId'], function () {
     // Routes accessible only to the user with ID 1

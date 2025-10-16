@@ -501,6 +501,14 @@ color:white !important;
                 </li>
             </li>
 
+            <li class="nav-item ">
+                <li class="nav-item {{ request()->routeIs('password.change') ? 'bg-grain' : '' }}">
+                    <a class="nav-link" href="{{ route('password.change') }}">
+                        <i class="fas fa-fw fa-key"></i>
+                        <span>تغيير كلمة المرور</span></a>
+                </li>
+            </li>
+
             <!-- Divider -->
             <hr class="sidebar-divider">
 
