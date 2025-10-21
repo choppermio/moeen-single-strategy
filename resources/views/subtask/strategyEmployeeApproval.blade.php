@@ -402,7 +402,7 @@ $user_id  = auth()->user()->id;
                                             <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true" style="display: none;"></span>
                                         </button>
                                     </form>
-                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#rejectModal" data-taskid="{{ $subtask->id }}" data-taskname="{{ $subtask->name }}">
+                                    <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#rejectModal" onClick="setRejectTaskId({{ $subtask->id }}, '{{ $subtask->name }}')" data-taskid="{{ $subtask->id }}" data-taskname="{{ $subtask->name }}">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 @else
@@ -815,7 +815,7 @@ $(document).ready(function(){
 
     // Handle rejection form submission
     $('#rejectForm').on('submit', function(e) {
-        alert('dfdaf');
+    
         e.preventDefault();
         
         var taskid = $('#rejectTaskId').val();
