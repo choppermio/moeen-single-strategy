@@ -93,7 +93,8 @@ $uniquetasks = array_values($uniqueTasks);
 
           // Display task name and original assignment
           if ($employee_task_position) {
-              echo $tasko['name'] . ' (' . $tasko['output'] . ')';
+              echo $tasko['name'] . '';
+              echo ' <span class="badge badge-secondary">مخرج الإجراء' . $tasko['output'] . '</span>';
           } else {
               echo e($tasko['name'] . ' ');
           }

@@ -40,6 +40,7 @@ $user_id  = auth()->user()->id;
                 <th>المهمة</th>
                 <th>مسؤول المهمة</th>
                 <th>الإجراء الرئيسي</th>
+                <th>مخرج الإجراء</th>
                  <th>المبادرة</th> 
                 <th>نسبة الإكتمال</th>
                 <th>الشواهد</th>
@@ -58,7 +59,9 @@ $user_id  = auth()->user()->id;
                 <td>{{ $subtask->name }}</td>
                 <td>{{ \App\Models\EmployeePosition::where('id', $subtask->user_id)->first()->name }}</td>
                 <td>{{ $task->name }} ({{\App\Models\EmployeePosition::where('id',$task->user_id)->first()->name}})</td>
-
+                <td>
+                {{ $task->output }}
+                </td>
                 @php
                 $mubadara_info = \App\Models\Mubadara::where('id',$task->parent_id)->first();
                 @endphp
@@ -195,7 +198,8 @@ $user_id  = auth()->user()->id;
                 
                        <div>
                              <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
-                            <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{$task->output}})</span>
+                            <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) </span>
+                            <span class="badge badge-primary">مخرج الإجراء : {{ $task->output }}</span>
                         
                         </div>
                         
@@ -457,10 +461,12 @@ $user_id  = auth()->user()->id;
                         <th>مسؤول المهمة</th>
                         <th>الوصف</th>
                         <th>الإجراء الرئيسي</th>
-                        <th>المبادرة</th>
+                        <th>المخرج</th>
+                       
+                        <!-- <th>المبادرة</th> -->
                         <th>نسبة الإكتمال</th>
                         <th>الشواهد</th>
-                        <th>المخرج</th>
+                        
                         <th>الإجراء</th>
                     </tr>
                 </thead>
@@ -477,7 +483,8 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                         <tr>
                             <td>{{ $subtask->name }}
                               <div>  <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
-                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{$task->output}})</span>
+                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) </span>
+                                <span class="badge badge-primary">مخرج الإجراء:({{$task->output}})</span>
                             </div>
                             
                             </td>
@@ -501,10 +508,10 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                                         </div>
                                     </div>
                                     </td>
-                           
+                           <td>{{$task->name}}</td>
+                           <td>{{$task->output}}</td>
                             <td>{{ $subtask->percentage }} %</td>
                             <td><a href="{{ url(env('APP_URL_REAL') . '/mysubtasks-evidence/' . $subtask->id) }}" class="btn btn-info" target="_blank">الشواهد</a></td>
-                            <td>{{ $task->output }}</td>
                             <td>
                              
                             </td>
@@ -546,7 +553,8 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                             <td>{{ $subtask->name }}
                                 <div>
                                 <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
-                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{$task->output}})</span>
+                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>
+                                <span class="badge badge-primary">مخرج الإجراء : {{ $task->output }}</span>
                                
                             </div>
                             </td>

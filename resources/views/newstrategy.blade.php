@@ -138,7 +138,7 @@ $uniquetasks = array_values($uniqueTasks);
     @foreach($uniquetasks as $uniquetask)
     <li style="    background: #ffffff;
     border: dotted 3px #e1e1e1;
-    padding: 8px;">{{ $uniquetask->name }}  ({{$uniquetask->output}})<span class="badge badge-secondary">{{ get_user_name($uniquetask->user_id)  }}</span> | <span class="badge badge-success">{{ $uniquetask->percentage }} % </span> 
+    padding: 8px;">{{ $uniquetask->name }}  <span class="badge badge-primary">مخرج الإجراء: {{$uniquetask->output}}</span>|<span class="badge badge-secondary">{{ get_user_name($uniquetask->user_id)  }}</span> | <span class="badge badge-success">{{ $uniquetask->percentage }} % </span> 
         
 <a href="{{env("APP_URL_REAL")  }}/subtask/create?task={{$uniquetask->id}}" target="_blank">
     <button class="btn btn-secondary btn-sm padding-sm-button button" data-toggle="tooltip" data-placement="top" title="أضف مهمة فرعية"><i class="fa-solid fa-plus" ></i></button>

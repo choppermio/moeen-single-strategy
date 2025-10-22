@@ -53,14 +53,18 @@
         <span class="badge badge-info"  style="word-break: break-all;">مبادرة : {{ $mubadara->name ?? 'N/A' }}</span>
 <br />             
         <span class="" style="    overflow-wrap: break-word;
-    width: 200px;
+    width: 100%;
     color: #fff;
     background-color: #6c757d;
     padding: 3px;
     border-radius: 30px;
+    font-size: 12px;
     display: block;
     margin-top: 0.4em;
-    text-align: center;">إجراء : {{ $task->name ?? 'N/A' }} ({{ $task->output ?? 'N/A' }})</span>         </div>
+    text-align: right; padding-right: 5px; font-weight: bold;" class="pr-1">إجراء : {{ $task->name ?? 'N/A' }} </span>     
+
+<span class="badge badge-primary mt-1 ">مخرج الإجراء : {{ $task->output ?? 'N/A' }}</span>
+</div>
 
             </td>
             <td data-content="وصف المهمة">
