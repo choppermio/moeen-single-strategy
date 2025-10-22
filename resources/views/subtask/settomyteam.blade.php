@@ -81,7 +81,6 @@ $uniquetasks = array_values($uniqueTasks);
 
         <ul >
         @foreach ($uniqueTasks as $tasko)
-        // skip if tasko undefined
         @if(!isset($tasko))
         @continue
         @endif
@@ -94,7 +93,7 @@ $uniquetasks = array_values($uniqueTasks);
 
           // Display task name and original assignment
           if ($employee_task_position) {
-              echo $tasko['name'] . '';
+              echo $tasko['name'] . ' (' . $tasko['output'] . ')';
           } else {
               echo e($tasko['name'] . ' ');
           }

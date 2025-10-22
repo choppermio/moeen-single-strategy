@@ -75,7 +75,7 @@ $subtasks = \App\Models\Subtask::where('parent_user_id', $user_id)
                 <td>{{ $subtask->ticket_id }}</td>
                 <td>{{ $subtask->name }}
                     <div>     <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span><br />
-                         <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>
+                         <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{ $task->output }})</span>
                      </div>
                      
                      </td>

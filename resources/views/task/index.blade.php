@@ -187,6 +187,7 @@
         <thead>
             <tr>
                 <th>الإسم</th>
+                <th>المخرج</th>
                 <th>النسبة</th>
                 <th>الإجراء</th>
             </tr>
@@ -194,7 +195,9 @@
         <tbody>
             @foreach ($tasks as $task)
             <tr>
-                <td>{{ $task->name }}</td>                <td>
+                <td>{{ $task->name }}</td>         
+                <td>{{ $task->output }}</td>
+                <td>
                     <div class="d-flex align-items-center">
                         <div class="progress progress-sm flex-grow-1 mr-2">
                             <div class="progress-bar 

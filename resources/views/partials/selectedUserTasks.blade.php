@@ -7,7 +7,7 @@
             $mubadara_name = \App\Models\Mubadara::where('id',$task->parent_id)->first()->name;
             @endphp
 
-        ( {{$mubadara_name }})
+        ( {{$mubadara_name }})  ({{ $task->output }})
         </option>
     @endforeach
 </select>

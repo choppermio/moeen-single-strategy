@@ -60,7 +60,7 @@
     border-radius: 30px;
     display: block;
     margin-top: 0.4em;
-    text-align: center;">إجراء : {{ $task->name ?? 'N/A' }}</span>         </div>
+    text-align: center;">إجراء : {{ $task->name ?? 'N/A' }} ({{ $task->output ?? 'N/A' }})</span>         </div>
 
             </td>
             <td data-content="وصف المهمة">

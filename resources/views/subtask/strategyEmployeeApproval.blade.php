@@ -193,8 +193,10 @@ $user_id  = auth()->user()->id;
                             <td>{{ $subtask->ticket_id }}</td>
                             <td>{{ $subtask->name }}
                 
-                       <div>     <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
-                            <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>
+                       <div>
+                             <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
+                            <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{$task->output}})</span>
+                        
                         </div>
                         
                         </td>
@@ -475,7 +477,7 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                         <tr>
                             <td>{{ $subtask->name }}
                               <div>  <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
-                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>
+                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{$task->output}})</span>
                             </div>
                             
                             </td>
@@ -544,7 +546,7 @@ $task = \App\Models\Task::where('id', $subtask->parent_id)->first();
                             <td>{{ $subtask->name }}
                                 <div>
                                 <span class="badge badge-secondary">مبادرة : {{ $mubadara_info->name }} ({{ \App\Models\EmployeePosition::where('id', $mubadara_info->user_id)->first()->name }})</span>
-                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }})</span>
+                                <span class="badge badge-info">الإجراء الرئيسي : {{ $task->name }} ({{ \App\Models\EmployeePosition::where('id', $task->user_id)->first()->name }}) ({{$task->output}})</span>
                                
                             </div>
                             </td>
