@@ -48,6 +48,14 @@ return [
             'url' => env('APP_URL').'/uploads',
             'visibility' => 'public',
         ],
+
+        'task_uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads/task-attachments'),
+            'url' => env('APP_URL').'/uploads/task-attachments',
+            'visibility' => 'public',
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

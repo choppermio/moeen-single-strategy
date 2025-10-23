@@ -16,6 +16,7 @@ use App\Http\Controllers\TodoController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\TaskManagementController;
 use App\Http\Controllers\HadafstrategyController;
 use App\Http\Controllers\EmployeePositionController;
 use App\Http\Controllers\TicketTransitionController;
@@ -376,6 +377,12 @@ Route::post('/debug-login/test-auth', function(Illuminate\Http\Request $request)
 
 Route::post('/change-password', [PasswordController::class, 'store'])->name('password.update2');
 Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change')->middleware('auth');
+
+// Task Management - pause/unpause and attachments
+Route::post('/task/toggle-hidden', [TaskManagementController::class, 'toggleHidden'])->name('task.toggleHidden')->middleware('auth');
+Route::get('/task/{id}/attachments', [TaskManagementController::class, 'getAttachments'])->name('task.getAttachments')->middleware('auth');
+Route::post('/task/{id}/upload-attachments', [TaskManagementController::class, 'uploadAttachments'])->name('task.uploadAttachments')->middleware('auth');
+Route::delete('/task/{id}/attachments/{mediaId}', [TaskManagementController::class, 'deleteAttachment'])->name('task.deleteAttachment')->middleware('auth');
 
 Route::group(['middleware' => 'checkUserId'], function () {
     // Routes accessible only to the user with ID 1

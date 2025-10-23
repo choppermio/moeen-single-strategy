@@ -4,13 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Task extends Model
+class Task extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
     //fillable
     protected $fillable = [
-    'id', 'percentage', 'name', 'parent_id','user_id','output',
+    'id', 'percentage', 'name', 'parent_id','user_id','output','hidden',
     'user', 
     'marketing_cost',
     'real_cost',

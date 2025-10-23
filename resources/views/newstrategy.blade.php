@@ -138,11 +138,35 @@ $uniquetasks = array_values($uniqueTasks);
     @foreach($uniquetasks as $uniquetask)
     <li style="    background: #ffffff;
     border: dotted 3px #e1e1e1;
-    padding: 8px;">{{ $uniquetask->name }}  <span class="badge badge-primary">مخرج الإجراء: {{$uniquetask->output}}</span>|<span class="badge badge-secondary">{{ get_user_name($uniquetask->user_id)  }}</span> | <span class="badge badge-success">{{ $uniquetask->percentage }} % </span> 
+    padding: 8px;">
+        {{ $uniquetask->name }}  
+        <span class="badge badge-primary">مخرج الإجراء: {{$uniquetask->output}}</span>
+        |<span class="badge badge-secondary">{{ get_user_name($uniquetask->user_id)  }}</span> 
+        | <span class="badge badge-success">{{ $uniquetask->percentage }} % </span>
+        @if($uniquetask->hidden == 1)
+            <span class="badge badge-warning">متوقف مؤقتاً</span>
+        @endif
         
 <a href="{{env("APP_URL_REAL")  }}/subtask/create?task={{$uniquetask->id}}" target="_blank">
     <button class="btn btn-secondary btn-sm padding-sm-button button" data-toggle="tooltip" data-placement="top" title="أضف مهمة فرعية"><i class="fa-solid fa-plus" ></i></button>
 </a>
+
+<button class="btn btn-sm padding-sm-button button toggle-hidden-btn {{ $uniquetask->hidden == 1 ? 'btn-success' : 'btn-warning' }}" 
+    data-task-id="{{ $uniquetask->id }}" 
+    data-hidden="{{ $uniquetask->hidden }}" 
+    data-toggle="tooltip" 
+    data-placement="top" 
+    title="{{ $uniquetask->hidden == 1 ? 'استئناف المهمة' : 'إيقاف مؤقت' }}">
+    <i class="fa-solid {{ $uniquetask->hidden == 1 ? 'fa-play' : 'fa-pause' }}"></i>
+</button>
+
+<button class="btn btn-info btn-sm padding-sm-button button view-attachments-btn" 
+    data-task-id="{{ $uniquetask->id }}" 
+    data-task-name="{{ $uniquetask->name }}" 
+    data-toggle="modal" 
+    data-target="#attachmentsModal">
+    <i class="fa-solid fa-paperclip"></i> المرفقات
+</button>
         @php
    
         @endphp
@@ -346,6 +370,48 @@ if ($mubadara) {
     </div>
 </div>
 
+<!-- Modal for Task Attachments -->
+<div class="modal fade" id="attachmentsModal" tabindex="-1" role="dialog" aria-labelledby="attachmentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="attachmentsModalLabel">مرفقات المهمة: <span id="taskNameDisplay"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="attachmentsListContainer">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">جاري التحميل...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr />
+                
+                <h6>رفع مرفقات جديدة</h6>
+                <form id="uploadAttachmentsForm" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="taskId" id="attachmentTaskId" />
+                    <div class="form-group">
+                        <label for="attachmentFiles">اختر الملفات</label>
+                        <input type="file" class="form-control-file" id="attachmentFiles" name="files[]" multiple accept="*/*">
+                        <small class="form-text text-muted">يمكنك اختيار عدة ملفات</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> رفع الملفات
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -379,6 +445,165 @@ $(document).ready(function () {
             },
             error: function () {
                 alert('Failed to remove task.');
+            }
+        });
+    });
+
+    // Toggle Hidden Status (Pause/Unpause)
+    $('.toggle-hidden-btn').on('click', function (e) {
+        e.preventDefault();
+        
+        let btn = $(this);
+        let taskId = btn.data('task-id');
+        let currentHidden = btn.data('hidden');
+        let newHidden = currentHidden == 1 ? 0 : 1;
+        
+        $.ajax({
+            url: '{{ route("task.toggleHidden") }}',
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            data: {
+                task_id: taskId,
+                hidden: newHidden
+            },
+            success: function (response) {
+                if (response.success) {
+                    // Update button appearance and data
+                    btn.data('hidden', response.hidden);
+                    
+                    if (response.hidden == 1) {
+                        btn.removeClass('btn-warning').addClass('btn-success');
+                        btn.find('i').removeClass('fa-pause').addClass('fa-play');
+                        btn.attr('title', 'استئناف المهمة');
+                        
+                        // Add paused badge if not exists
+                        if (!btn.parent().find('.badge-warning').length) {
+                            btn.before('<span class="badge badge-warning">متوقف مؤقتاً</span> ');
+                        }
+                    } else {
+                        btn.removeClass('btn-success').addClass('btn-warning');
+                        btn.find('i').removeClass('fa-play').addClass('fa-pause');
+                        btn.attr('title', 'إيقاف مؤقت');
+                        
+                        // Remove paused badge
+                        btn.parent().find('.badge-warning').remove();
+                    }
+                    
+                    alert(response.message);
+                }
+            },
+            error: function () {
+                alert('حدث خطأ أثناء تحديث حالة المهمة');
+            }
+        });
+    });
+
+    // View Attachments Modal
+    $('.view-attachments-btn').on('click', function () {
+        let taskId = $(this).data('task-id');
+        let taskName = $(this).data('task-name');
+        
+        $('#taskNameDisplay').text(taskName);
+        $('#attachmentTaskId').val(taskId);
+        
+        // Load attachments
+        $('#attachmentsListContainer').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">جاري التحميل...</span></div></div>');
+        
+        $.ajax({
+            url: '/task/' + taskId + '/attachments',
+            method: 'GET',
+            success: function (response) {
+                if (response.success) {
+                    let html = '';
+                    
+                    if (response.attachments && response.attachments.length > 0) {
+                        html += '<div class="list-group">';
+                        response.attachments.forEach(function (attachment) {
+                            let fileUrl = attachment.original_url || attachment.url || '#';
+                            let fileName = attachment.file_name || attachment.name || 'ملف';
+                            let mediaId = attachment.id;
+                            
+                            html += '<div class="list-group-item d-flex justify-content-between align-items-center">';
+                            html += '<a href="' + fileUrl + '" target="_blank" class="flex-grow-1">';
+                            html += '<i class="fas fa-file"></i> ' + fileName;
+                            html += '</a>';
+                            html += '<button class="btn btn-danger btn-sm ml-2 delete-attachment-btn" data-media-id="' + mediaId + '" data-task-id="' + taskId + '">';
+                            html += '<i class="fas fa-times"></i>';
+                            html += '</button>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    } else {
+                        html = '<div class="alert alert-info">لا توجد مرفقات لهذه المهمة</div>';
+                    }
+                    
+                    $('#attachmentsListContainer').html(html);
+                }
+            },
+            error: function () {
+                $('#attachmentsListContainer').html('<div class="alert alert-danger">حدث خطأ أثناء تحميل المرفقات</div>');
+            }
+        });
+    });
+
+    // Upload Attachments Form
+    $('#uploadAttachmentsForm').on('submit', function (e) {
+        e.preventDefault();
+        
+        let formData = new FormData(this);
+        let taskId = $('#attachmentTaskId').val();
+        
+        $.ajax({
+            url: '/task/' + taskId + '/upload-attachments',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            success: function (response) {
+                alert('تم رفع الملفات بنجاح');
+                $('#attachmentFiles').val('');
+                
+                // Reload attachments list
+                $('.view-attachments-btn[data-task-id="' + taskId + '"]').trigger('click');
+            },
+            error: function () {
+                alert('حدث خطأ أثناء رفع الملفات');
+            }
+        });
+    });
+
+    // Delete Attachment
+    $(document).on('click', '.delete-attachment-btn', function (e) {
+        e.preventDefault();
+        
+        if (!confirm('هل أنت متأكد من حذف هذا المرفق؟')) {
+            return;
+        }
+        
+        let btn = $(this);
+        let mediaId = btn.data('media-id');
+        let taskId = btn.data('task-id');
+        
+        $.ajax({
+            url: '/task/' + taskId + '/attachments/' + mediaId,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            success: function (response) {
+                if (response.success) {
+                    alert('تم حذف المرفق بنجاح');
+                    // Reload attachments list
+                    $('.view-attachments-btn[data-task-id="' + taskId + '"]').trigger('click');
+                }
+            },
+            error: function () {
+                alert('حدث خطأ أثناء حذف المرفق');
             }
         });
     });

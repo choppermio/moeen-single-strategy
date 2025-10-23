@@ -99,7 +99,9 @@ $uniquetasks = array_values($uniqueTasks);
               echo e($tasko['name'] . ' ');
           }
           @endphp
-          
+          @if($tasko['hidden'] == 1)
+            <span class="badge badge-warning">مهمة متوقفة </span>
+          @endif
           <br>
               <button style="display:inline-block" type="button" subtask="{{$tasko['id']}}" typo="task" class="btn btn-primary   button-change-user btn-sm btn-ss" data-toggle="modal" data-target="#exampleModal">
               <i class="fas fa-user"></i>

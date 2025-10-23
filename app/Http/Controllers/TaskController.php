@@ -341,4 +341,15 @@ class TaskController extends Controller
     return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
 }
 
-}
+    /**
+     * Toggle task hidden status (pause/unpause)
+     */
+    public function toggleHidden(Request $request)
+    {
+        $task = Task::findOrFail($request->task_id);
+        $task->hidden = $request->hidden;
+        $task->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => $task->hidde

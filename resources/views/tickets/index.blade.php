@@ -546,7 +546,7 @@
                     @endphp
                   @foreach($tasks as $task)
                   @if(isset($task->task->id))
-                    <option value="{{ $task->task->id }}">{{ $task->task->name }}</option>
+                    <option value="{{ $task->task->id }}" @if($task->hidden == 1) disabled @endif>{{ $task->task->name }}</option>
                   @endif
                   @endforeach
                 </select>
