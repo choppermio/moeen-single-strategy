@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Moashermkmf;
 use App\Models\Task;
 use Illuminate\Http\Request;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
@@ -352,4 +352,8 @@ class TaskController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => $task->hidde
+            'message' => $task->hidden ? 'Task paused successfully' : 'Task resumed successfully'
+        ]);
+    }
+}
+    
