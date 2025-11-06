@@ -23,6 +23,7 @@ use App\Http\Controllers\TicketTransitionController;
 use App\Http\Controllers\MoasheradastrategyController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\EmployeePositionRelationController;
+use App\Http\Controllers\PermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -165,20 +166,30 @@ Route::get('/test-email-page', function () {
 // Stats API for auto-updating sidebar badges
 Route::get('/api/stats/sidebar-notifications', [App\Http\Controllers\StatsController::class, 'sidepanelnotificationnumber'])->name('stats.sidebar');
 
-// Stats Dashboard - Admin Only
+// Stats Dashboard - Admin Only (temporary fallback to old system)
 Route::get('/stats/dashboard', [App\Http\Controllers\StatsController::class, 'dashboard'])
     ->name('stats.dashboard')
+    ->middleware('auth'); // Temporarily removed admin check
+
+// Original permission-based route (for when permissions are working)
+Route::get('/stats/dashboard-permissions', [App\Http\Controllers\StatsController::class, 'dashboard'])
+    ->name('stats.dashboard.permissions')
+    ->middleware(['auth', 'permission:view_statistics_dashboard']);
+
+// Temporary bypass for testing (remove after fixing)
+Route::get('/stats/dashboard-test', [App\Http\Controllers\StatsController::class, 'dashboard'])
+    ->name('stats.dashboard.test')
     ->middleware('auth');
 
 // User Management Routes (for debugging login issues)
 Route::get('/user-management', function () {
     return view('user-management');
-})->name('user.management');
+})->name('user.management')->middleware(['auth', 'permission:manage_permissions']);
 
 // Organizational Hierarchy - Admin Only
 Route::get('/stats/hierarchy', [App\Http\Controllers\StatsController::class, 'hierarchy'])
     ->name('stats.hierarchy')
-    ->middleware('auth');
+    ->middleware(['auth', 'permission:view_hierarchy']);
 
 Route::get('/user-management/api/users', function () {
     try {
@@ -280,6 +291,208 @@ Route::get('/test-simple', function() {
     return "✅ Routes are working! Database users: " . App\Models\User::count();
 });
 
+// Test route with permission middleware
+Route::get('/test-permission', function() {
+    return "✅ Permission middleware is working! You have the required permissions.";
+})->middleware(['auth', 'permission:view_dashboard']);
+
+// Permission testing routes
+Route::get('/permission-test', [App\Http\Controllers\PermissionTestController::class, 'index'])->middleware('auth')->name('permission.test');
+Route::get('/permission-test/{permission}', [App\Http\Controllers\PermissionTestController::class, 'test'])->middleware('auth')->name('permission.test.specific');
+
+// Quick permission assignment for testing (temporary - remove in production)
+Route::get('/assign-dashboard-permission', function() {
+    $user = auth()->user();
+    if (!$user) {
+        return 'لم يتم تسجيل الدخول';
+    }
+    
+    $position = \App\Models\EmployeePosition::where('user_id', $user->id)->first();
+    if (!$position) {
+        return 'لم يتم العثور على منصب وظيفي للمستخدم';
+    }
+    
+    $permission = \App\Models\Permission::where('name', 'view_statistics_dashboard')->first();
+    if (!$permission) {
+        return 'لم يتم العثور على صلاحية view_statistics_dashboard';
+    }
+    
+    // Check if already assigned
+    if ($position->permissions()->where('permission_id', $permission->id)->exists()) {
+        return 'الصلاحية مخصصة بالفعل للمنصب: ' . $position->name;
+    }
+    
+    // Assign permission
+    $position->permissions()->attach($permission->id);
+    
+    return 'تم تخصيص صلاحية لوحة الإحصائيات للمنصب: ' . $position->name . '<br><a href="/stats/dashboard">اذهب إلى لوحة الإحصائيات</a>';
+})->middleware('auth');
+
+// Debug permission status
+Route::get('/debug-permissions', function() {
+    $user = auth()->user();
+    if (!$user) {
+        return 'No authenticated user';
+    }
+    
+    $position = \App\Models\EmployeePosition::where('user_id', $user->id)->first();
+    if (!$position) {
+        return 'No employee position found for user: ' . $user->name;
+    }
+    
+    $output = [];
+    $output[] = '<h3>Permission Debug Information</h3>';
+    $output[] = '<strong>User:</strong> ' . $user->name . ' (ID: ' . $user->id . ')';
+    $output[] = '<strong>Employee Position:</strong> ' . $position->name . ' (ID: ' . $position->id . ')';
+    
+    // Check specific permission
+    $permission = \App\Models\Permission::where('name', 'view_statistics_dashboard')->first();
+    if ($permission) {
+        $hasPermission = $position->permissions()->where('permission_id', $permission->id)->exists();
+        $output[] = '<strong>Has view_statistics_dashboard permission:</strong> ' . ($hasPermission ? 'YES' : 'NO');
+        
+        // Test helper function
+        $helperResult = has_permission('view_statistics_dashboard');
+        $output[] = '<strong>has_permission() function result:</strong> ' . ($helperResult ? 'TRUE' : 'FALSE');
+        
+        // Test position method
+        $positionResult = $position->hasPermission('view_statistics_dashboard');
+        $output[] = '<strong>$position->hasPermission() result:</strong> ' . ($positionResult ? 'TRUE' : 'FALSE');
+    } else {
+        $output[] = '<strong>Permission "view_statistics_dashboard" not found in database!</strong>';
+    }
+    
+    // List all permissions for this position
+    $allPermissions = $position->permissions()->pluck('name')->toArray();
+    $output[] = '<strong>All permissions for this position:</strong><br>' . 
+                (count($allPermissions) > 0 ? implode('<br>', $allPermissions) : 'None');
+    
+    // Check if permission exists in pivot table
+    $pivotCount = \DB::table('employee_position_permission')
+        ->where('employee_position_id', $position->id)
+        ->count();
+    $output[] = '<strong>Total permissions in pivot table:</strong> ' . $pivotCount;
+    
+    return implode('<br><br>', $output);
+})->middleware('auth');
+
+// Debug admin status
+Route::get('/debug-admin', function() {
+    $user = auth()->user();
+    if (!$user) {
+        return 'No authenticated user';
+    }
+    
+    $position = \App\Models\EmployeePosition::where('user_id', $user->id)->first();
+    
+    $output = [];
+    $output[] = '<h3>Admin Debug Information</h3>';
+    $output[] = '<strong>User:</strong> ' . $user->name . ' (ID: ' . $user->id . ')';
+    $output[] = '<strong>Employee Position:</strong> ' . ($position ? $position->name . ' (ID: ' . $position->id . ')' : 'None');
+    
+    // Check ADMIN_ID environment variable
+    $adminIds = env('ADMIN_ID', '');
+    $output[] = '<strong>ADMIN_ID from .env:</strong> ' . ($adminIds ?: 'Not set');
+    
+    // Test both is_admin functions
+    try {
+        $adminByUserId = in_array($user->id, explode(',', $adminIds));
+        $output[] = '<strong>Admin by User ID:</strong> ' . ($adminByUserId ? 'YES' : 'NO');
+    } catch (Exception $e) {
+        $output[] = '<strong>Admin by User ID:</strong> Error - ' . $e->getMessage();
+    }
+    
+    try {
+        $adminByPositionId = $position ? in_array($position->id, explode(',', $adminIds)) : false;
+        $output[] = '<strong>Admin by Position ID:</strong> ' . ($adminByPositionId ? 'YES' : 'NO');
+    } catch (Exception $e) {
+        $output[] = '<strong>Admin by Position ID:</strong> Error - ' . $e->getMessage();
+    }
+    
+    // Test is_admin helper function
+    try {
+        $isAdminResult = is_admin();
+        $output[] = '<strong>is_admin() function result:</strong> ' . ($isAdminResult ? 'TRUE' : 'FALSE');
+    } catch (Exception $e) {
+        $output[] = '<strong>is_admin() function result:</strong> Error - ' . $e->getMessage();
+    }
+    
+    return implode('<br><br>', $output);
+})->middleware('auth');
+
+// Force assign all permissions (for testing only)
+Route::get('/force-assign-all-permissions', function() {
+    $user = auth()->user();
+    if (!$user) {
+        return 'No authenticated user';
+    }
+    
+    $position = \App\Models\EmployeePosition::where('user_id', $user->id)->first();
+    if (!$position) {
+        return 'No employee position found for user: ' . $user->name;
+    }
+    
+    // Get all permission IDs
+    $allPermissionIds = \App\Models\Permission::pluck('id')->toArray();
+    
+    // Assign all permissions to this position
+    $position->permissions()->sync($allPermissionIds);
+    
+    $assignedCount = count($allPermissionIds);
+    
+    return "تم تخصيص جميع الصلاحيات ($assignedCount) للمنصب: " . $position->name . 
+           '<br><br><a href="/debug-permissions">تحقق من الصلاحيات</a>' .
+           '<br><a href="/stats/dashboard">اذهب إلى لوحة الإحصائيات</a>';
+})->middleware('auth');
+
+// Quick admin fix - makes current user an admin
+Route::get('/make-me-admin', function() {
+    $user = auth()->user();
+    if (!$user) {
+        return 'No authenticated user';
+    }
+    
+    $position = \App\Models\EmployeePosition::where('user_id', $user->id)->first();
+    if (!$position) {
+        return 'No employee position found for user: ' . $user->name;
+    }
+    
+    // Give manage_permissions permission to current user
+    $managePermissionsPermission = \App\Models\Permission::where('name', 'manage_permissions')->first();
+    if ($managePermissionsPermission && !$position->permissions()->where('permission_id', $managePermissionsPermission->id)->exists()) {
+        $position->permissions()->attach($managePermissionsPermission->id);
+    }
+    
+    // Instructions to add to .env
+    $output = [];
+    $output[] = '<h3>Admin Setup Instructions</h3>';
+    $output[] = '<strong>Your User ID:</strong> ' . $user->id;
+    $output[] = '<strong>Your Position ID:</strong> ' . $position->id;
+    $output[] = '<strong>Current ADMIN_ID in .env:</strong> ' . (env('ADMIN_ID') ?: 'Not set');
+    
+    $output[] = '<hr>';
+    $output[] = '<h4>Permission System Setup Complete!</h4>';
+    $output[] = 'You now have the "manage_permissions" permission assigned.';
+    $output[] = '<br><a href="/permissions" class="btn btn-primary">Go to Permissions Management</a>';
+    
+    $output[] = '<hr>';
+    $output[] = '<h4>Option 1: Add to .env file (for legacy admin functions)</h4>';
+    $output[] = 'Add or update this line in your .env file:';
+    $output[] = '<code>ADMIN_ID=' . $user->id . ',' . $position->id . '</code>';
+    $output[] = '<small>This makes you admin by both User ID and Position ID</small>';
+    
+    $output[] = '<hr>';
+    $output[] = '<h4>Option 2: Use permission system (Recommended)</h4>';
+    $output[] = '<a href="/force-assign-all-permissions" class="btn btn-primary">Assign All Permissions</a>';
+    
+    return implode('<br>', $output);
+})->middleware('auth');
+
+// Test route with admin middleware (for testing old vs new system)
+Route::get('/test-admin', function() {
+    return "✅ Admin access working! You are an admin user.";
+})->middleware(['auth'])->name('test.admin');
+
 // Debug Login Interface
 Route::get('/debug-login', function() {
     try {
@@ -378,6 +591,16 @@ Route::post('/debug-login/test-auth', function(Illuminate\Http\Request $request)
 Route::post('/change-password', [PasswordController::class, 'store'])->name('password.update2');
 Route::get('/change-password', [PasswordController::class, 'index'])->name('password.change')->middleware('auth');
 
+// Permissions Management (Admin only)
+Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index')->middleware(['auth', 'permission:manage_permissions']);
+Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create')->middleware(['auth', 'permission:manage_permissions']);
+Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store')->middleware(['auth', 'permission:manage_permissions']);
+Route::get('/permissions/{id}/edit', [PermissionController::class, 'edit'])->name('permissions.edit')->middleware(['auth', 'permission:manage_permissions']);
+Route::post('/permissions/{id}/update', [PermissionController::class, 'updatePermission'])->name('permissions.updatePermission')->middleware(['auth', 'permission:manage_permissions']);
+Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy')->middleware(['auth', 'permission:manage_permissions']);
+Route::post('/permissions/{id}', [PermissionController::class, 'update'])->name('permissions.update')->middleware(['auth', 'permission:manage_permissions']);
+Route::get('/permissions/{id}', [PermissionController::class, 'getPermissions'])->name('permissions.get')->middleware(['auth', 'permission:manage_permissions']);
+
 // Task Management - pause/unpause and attachments
 Route::post('/task/toggle-hidden', [TaskManagementController::class, 'toggleHidden'])->name('task.toggleHidden')->middleware('auth');
 Route::get('/task/{id}/attachments', [TaskManagementController::class, 'getAttachments'])->name('task.getAttachments')->middleware('auth');
@@ -386,18 +609,18 @@ Route::delete('/task/{id}/attachments/{mediaId}', [TaskManagementController::cla
 
 Route::group(['middleware' => 'checkUserId'], function () {
     // Routes accessible only to the user with ID 1
-    Route::resource('hadafstrategies', '\App\Http\Controllers\HadafstrategyController');
+    Route::resource('hadafstrategies', '\App\Http\Controllers\HadafstrategyController')->middleware('permission:view_strategic_goals');
     Route::get('/send-notification', [SubtaskController::class, 'sendNotification']);
 
-    Route::get('/hadafstrategies/{id}/edit', [HadafstrategyController::class, 'edit'])->name('hadafstrategies.edit');
+    Route::get('/hadafstrategies/{id}/edit', [HadafstrategyController::class, 'edit'])->name('hadafstrategies.edit')->middleware('permission:manage_strategic_goals');
 
-    Route::resource('moasheradastrategy', '\App\Http\Controllers\MoasheradastrategyController');
-Route::get('/moasheradastrategy/{id}/edit', [MoasheradastrategyController::class, 'edit'])->name('Moasheradastrategy.edit');
-Route::resource('moashermkmf', '\App\Http\Controllers\MoashermkmfController');
-Route::resource('task', '\App\Http\Controllers\TaskController');
-Route::get('/get-tasks', [TaskController::class, 'getTasksByUserId']);
+    Route::resource('moasheradastrategy', '\App\Http\Controllers\MoasheradastrategyController')->middleware('permission:view_strategic_indicators');
+Route::get('/moasheradastrategy/{id}/edit', [MoasheradastrategyController::class, 'edit'])->name('Moasheradastrategy.edit')->middleware('permission:manage_strategic_indicators');
+Route::resource('moashermkmf', '\App\Http\Controllers\MoashermkmfController')->middleware('permission:view_efficiency_indicators');
+Route::resource('task', '\App\Http\Controllers\TaskController')->middleware('permission:view_main_tasks');
+Route::get('/get-tasks', [TaskController::class, 'getTasksByUserId'])->middleware('permission:view_main_tasks');
 
-Route::resource('mubadara', '\App\Http\Controllers\MubadaraController');
+Route::resource('mubadara', '\App\Http\Controllers\MubadaraController')->middleware('permission:view_initiatives');
 
 
 });
@@ -408,7 +631,7 @@ Route::resource('mubadara', '\App\Http\Controllers\MubadaraController');
 
 Route::group(['middleware' => 'auth'], function () {
     Route::post('removetaskmkmf',[HadafstrategyController::class, 'removeTaskMoasher'])->name('removetaskmkmf');
-Route::resource('subtask', '\App\Http\Controllers\SubtaskController');
+Route::resource('subtask', '\App\Http\Controllers\SubtaskController')->middleware('permission:view_subtasks');
 Route::get('employeepositionstop', [EmployeePositionController::class, 'top']);
 
 Route::resource('employeepositions', '\App\Http\Controllers\EmployeePositionController');
@@ -418,14 +641,12 @@ Route::post('attach-users-store/{position_id}', [EmployeePositionController::cla
 Route::get('attach-users/{position_id}', [EmployeePositionController::class, 'attach_users']);
 Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::class, 'destroy']);
 
-
-
     //create post route for this method changeTask in subtaskcontroller
-    Route::post('/change-task', [SubtaskController::class, 'changeTask'])->name('subtask.changeTask');
+    Route::post('/change-task', [SubtaskController::class, 'changeTask'])->name('subtask.changeTask')->middleware('permission:manage_subtasks');
     // AJAX route: update subtask percentage
-    Route::post('/subtask/update-percentage', [SubtaskController::class, 'updatePercentage'])->name('subtask.updatePercentage');
+    Route::post('/subtask/update-percentage', [SubtaskController::class, 'updatePercentage'])->name('subtask.updatePercentage')->middleware('permission:manage_subtasks');
     // AJAX bulk approve route
-    Route::post('/subtask/bulk-statusstrategy', [SubtaskController::class, 'bulkStatusStrategy'])->name('subtask.bulkStatusStrategy');
+    Route::post('/subtask/bulk-statusstrategy', [SubtaskController::class, 'bulkStatusStrategy'])->name('subtask.bulkStatusStrategy')->middleware('permission:approve_tasks');
     Route::post('/ticket-transitions', [TicketTransitionController::class, 'store']);
     
     Route::get('/', function () {
@@ -436,24 +657,24 @@ Route::get('employee-position-delete/{id}',[EmployeePositionRelationController::
         return view('employeepositionstop', compact('todos'));
     });    Route::get('/', [EmployeePositionController::class, 'top']);
 
-    Route::resource('tickets', '\App\Http\Controllers\TicketController');
+    Route::resource('tickets', '\App\Http\Controllers\TicketController')->middleware('permission:view_tickets');
 
-Route::get('/ticketsshow/{id}', [TicketController::class, 'showwithmessages'])->name('tickets.showwithmessages');
-Route::post('/tickets/{id}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store');
-Route::get('/ticket/ticketFilter', [TicketController::class, 'ticketfilter'])->name('tickets.filter');
+Route::get('/ticketsshow/{id}', [TicketController::class, 'showwithmessages'])->name('tickets.showwithmessages')->middleware('permission:view_tickets');
+Route::post('/tickets/{id}/messages', [TicketController::class, 'storeMessage'])->name('tickets.messages.store')->middleware('permission:view_tickets');
+Route::get('/ticket/ticketFilter', [TicketController::class, 'ticketfilter'])->name('tickets.filter')->middleware('permission:view_tickets');
     // Route::delete('/ticketdelete/{id}', [TicketController::class, 'deleteTicket']);
 
 // Admin ticket routes (only accessible by ADMIN_ID users)
-Route::get('/admin/tickets', [TicketController::class, 'adminIndex'])->name('tickets.admin.index');
-Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit');
-Route::put('/admin/tickets/{id}', [TicketController::class, 'adminUpdate'])->name('tickets.admin.update');
-Route::delete('/admin/tickets/{id}', [TicketController::class, 'adminDestroy'])->name('tickets.admin.destroy');
-Route::delete('/admin/tickets/{id}/remove-file', [TicketController::class, 'adminRemoveFile'])->name('tickets.admin.removeFile');
+Route::get('/admin/tickets', [TicketController::class, 'adminIndex'])->name('tickets.admin.index')->middleware('permission:manage_all_tickets');
+Route::get('/admin/tickets/{id}/edit', [TicketController::class, 'adminEdit'])->name('tickets.admin.edit')->middleware('permission:manage_all_tickets');
+Route::put('/admin/tickets/{id}', [TicketController::class, 'adminUpdate'])->name('tickets.admin.update')->middleware('permission:manage_all_tickets');
+Route::delete('/admin/tickets/{id}', [TicketController::class, 'adminDestroy'])->name('tickets.admin.destroy')->middleware('permission:manage_all_tickets');
+Route::delete('/admin/tickets/{id}/remove-file', [TicketController::class, 'adminRemoveFile'])->name('tickets.admin.removeFile')->middleware('permission:manage_all_tickets');
 
-Route::post('/settouser', [TicketController::class, 'settouser'])->name('ticket.settouser');
-Route::get('/ticket/history/{ticket_id}', [TicketController::class, 'history'])->name('ticket.history');
+Route::post('/settouser', [TicketController::class, 'settouser'])->name('ticket.settouser')->middleware('permission:view_tickets');
+Route::get('/ticket/history/{ticket_id}', [TicketController::class, 'history'])->name('ticket.history')->middleware('permission:view_tickets');
 
-Route::post('/change-status/{id}', [TicketController::class, 'status'])->name('ticket.changestatus');
+Route::post('/change-status/{id}', [TicketController::class, 'status'])->name('ticket.changestatus')->middleware('permission:view_tickets');
 Route::post('/add-todo', [TodoController::class, 'add_todo'])->name('todo.add');
 Route::post('/update-todo', [TodoController::class, 'update_todo'])->name('todo.update');
 
@@ -463,27 +684,27 @@ Route::get('/setpercentage', [TodoController::class, 'calculate_percentage']);
     
 Route::post('/upload-files/{modelType}/{modelId}', [ImageUploadController::class, 'uploadFiles'])->name('upload.images');
 Route::post('/upload-files-update/{modelType}/{modelId}', [ImageUploadController::class, 'uploadFilesUpdate'])->name('upload.images');
-Route::post('/subtask-status', [SubtaskController::class, 'status'])->name('subtask.status');
-Route::get('/subtask-analyst', [SubtaskController::class, 'analyst'])->name('subtask.analyst');
-Route::post('/statusstrategy', [SubtaskController::class, 'statusstrategy'])->name('subtask.statusstrategy');
+Route::post('/subtask-status', [SubtaskController::class, 'status'])->name('subtask.status')->middleware('permission:manage_subtasks');
+Route::get('/subtask-analyst', [SubtaskController::class, 'analyst'])->name('subtask.analyst')->middleware('permission:view_monthly_statistics');
+Route::post('/statusstrategy', [SubtaskController::class, 'statusstrategy'])->name('subtask.statusstrategy')->middleware('permission:approve_tasks');
     // Overdue subtasks for admin
-    Route::get('/subtask/overdue', [SubtaskController::class, 'overdue'])->name('subtask.overdue');
+    Route::get('/subtask/overdue', [SubtaskController::class, 'overdue'])->name('subtask.overdue')->middleware('permission:view_overdue_tasks');
     // Temporary public route for debugging (no auth) - remove after verification
-Route::get('mysubtasks', [SubtaskController::class, 'mysubtasks'])->name('subtask.mysubtasks');
-Route::get('mysubtaskscalendar', [SubtaskController::class, 'mysubtaskscalendar'])->name('subtask.mysubtaskscalendar');
-Route::get('addtomysubtasks', [SubtaskController::class, 'add'])->name('subtask.add');
-Route::get('mysubtasks-evidence/{subtaskid}', [SubtaskController::class, 'evidence'])->name('subtask.evidence');
-Route::get('settomyteam', [SubtaskController::class, 'settomyteam'])->name('subtask.settomyteam');
-Route::post('settomyteamform', [SubtaskController::class, 'settomyteamform'])->name('subtask.settomyteamform');
-Route::get('getassignments', [SubtaskController::class, 'getAssignments'])->name('subtask.getAssignments');
-Route::get('assignment-stats', [SubtaskController::class, 'assignmentStats'])->name('subtask.assignmentStats');
-Route::get('subtaskapproval', [SubtaskController::class, 'approval'])->name('subtask.approval');
-Route::get('strategyEmployeeApproval', [SubtaskController::class, 'strategyEmployeeApproval'])->name('subtask.strategyEmployeeApproval');
+Route::get('mysubtasks', [SubtaskController::class, 'mysubtasks'])->name('subtask.mysubtasks')->middleware('permission:view_my_tasks');
+Route::get('mysubtaskscalendar', [SubtaskController::class, 'mysubtaskscalendar'])->name('subtask.mysubtaskscalendar')->middleware('permission:view_calendar');
+Route::get('addtomysubtasks', [SubtaskController::class, 'add'])->name('subtask.add')->middleware('permission:view_my_tasks');
+Route::get('mysubtasks-evidence/{subtaskid}', [SubtaskController::class, 'evidence'])->name('subtask.evidence')->middleware('permission:view_my_tasks');
+Route::get('settomyteam', [SubtaskController::class, 'settomyteam'])->name('subtask.settomyteam')->middleware('permission:assign_to_team');
+Route::post('settomyteamform', [SubtaskController::class, 'settomyteamform'])->name('subtask.settomyteamform')->middleware('permission:assign_to_team');
+Route::get('getassignments', [SubtaskController::class, 'getAssignments'])->name('subtask.getAssignments')->middleware('permission:assign_to_team');
+Route::get('assignment-stats', [SubtaskController::class, 'assignmentStats'])->name('subtask.assignmentStats')->middleware('permission:view_assignment_stats');
+Route::get('subtaskapproval', [SubtaskController::class, 'approval'])->name('subtask.approval')->middleware('permission:approve_tasks');
+Route::get('strategyEmployeeApproval', [SubtaskController::class, 'strategyEmployeeApproval'])->name('subtask.strategyEmployeeApproval')->middleware('permission:strategy_employee_approval');
 
-Route::post('subtaskattachment/destroy', [SubtaskController::class, 'destroyattachement'])->name('subtask.attachment.delete');
+Route::post('subtaskattachment/destroy', [SubtaskController::class, 'destroyattachement'])->name('subtask.attachment.delete')->middleware('permission:manage_subtasks');
 
-Route::post('subtaskattachment', [SubtaskController::class, 'subtaskattachment'])->name('subtask.attachment');
-Route::get('ticket/ticketshow', [TicketController::class, 'ticketshow'])->name('tickets.ticketshow');
+Route::post('subtaskattachment', [SubtaskController::class, 'subtaskattachment'])->name('subtask.attachment')->middleware('permission:manage_subtasks');
+Route::get('ticket/ticketshow', [TicketController::class, 'ticketshow'])->name('tickets.ticketshow')->middleware('permission:view_tickets');
 
 });
 

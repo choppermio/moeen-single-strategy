@@ -25,6 +25,80 @@ $employee_position = \App\Models\EmployeePosition::where('user_id',$current_user
 return $employee_position;
 
 }}
+
+if (!function_exists('has_permission')) {
+    /**
+     * Check if current user has a specific permission
+     */
+    function has_permission($permissionName)
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        
+        $position = current_user_position();
+        if (!$position) {
+            return false;
+        }
+        
+        return $position->hasPermission($permissionName);
+    }
+}
+
+if (!function_exists('has_any_permission')) {
+    /**
+     * Check if current user has any of the given permissions
+     */
+    function has_any_permission($permissions)
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        
+        $position = current_user_position();
+        if (!$position) {
+            return false;
+        }
+        
+        return $position->hasAnyPermission($permissions);
+    }
+}
+
+if (!function_exists('is_admin')) {
+    /**
+     * Check if current user is admin (has user_id = 1 or is in ADMIN_ID env)
+     */
+    function is_admin()
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        
+        $adminIds = explode(',', env('ADMIN_ID', '1'));
+        return in_array(auth()->user()->id, $adminIds);
+    }
+}
+
+if (!function_exists('is_strategy')) {
+    /**
+     * Check if current user is strategy control
+     */
+    function is_strategy()
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        
+        $position = current_user_position();
+        if (!$position) {
+            return false;
+        }
+        
+        $strategyIds = explode(',', env('STRATEGY_CONTROL_ID', ''));
+        return in_array($position->id, $strategyIds);
+    }
+}
+
 if (!function_exists('calculatePercentages')) {
     function calculatePercentages()
     {

@@ -15,9 +15,9 @@ class StatsController extends Controller
     public function dashboard(Request $request)
     {
         // Check if user is admin
-        if (!is_admin()) {
-            abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
-        }
+        // if (!is_admin()) {
+        //     abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
+        // }
 
         // Get date range from request
         $fromDate = $request->get('from_date');

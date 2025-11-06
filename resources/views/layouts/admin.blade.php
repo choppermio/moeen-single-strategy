@@ -337,14 +337,23 @@ color:white !important;
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>لوحة التحكم</span></a>
             </li>
-                        @if (is_admin())
-
+                        @if (has_permission('manage_employee_positions'))
             <li class="nav-item {{ request()->routeIs('employeepositions.index') ? 'bg-grain' : '' }}">
                 <a class="nav-link" href="{{ route('employeepositions.index') }}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>المناصب الوظيفية</span></a>
             </li>
+            @endif
+
+            @if (has_permission('manage_permissions'))
+            <li class="nav-item {{ request()->routeIs('permissions.index') ? 'bg-grain' : '' }}">
+                <a class="nav-link" href="{{ route('permissions.index') }}">
+                    <i class="fas fa-fw fa-user-shield"></i>
+                    <span>إدارة الصلاحيات</span></a>
+            </li>
+            @endif
             
+            @if (has_permission('view_statistics_dashboard'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->routeIs('stats.dashboard') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ route('stats.dashboard') }}">
@@ -352,7 +361,9 @@ color:white !important;
                         <span>لوحة الإحصائيات</span></a>
                 </li>
             </li>
+            @endif
             
+            @if (has_permission('view_hierarchy'))
             <li class="nav-item ">
                 <li style="display: none;" class="nav-item {{ request()->routeIs('stats.hierarchy') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ route('stats.hierarchy') }}">
@@ -360,12 +371,15 @@ color:white !important;
                         <span>الهيكل التنظيمي</span></a>
                 </li>
             @endif
+            @if (has_permission('view_monthly_statistics'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->is('subtask-analyst*') && request()->get('type') == 'month' ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ url('/subtask-analyst?type=month&id='.date("m").'&department_id='.current_user_position()->id) }}&solo=true">
                         <i class="fas fa-fw fa-chart-bar"></i>
                         <span>احصائياتي الشهرية</span></a>
                 </li>
+            @endif
+            @if (has_permission('view_yearly_statistics'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->is('subtask-analyst*') && request()->get('type') == 'year' ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ url('/subtask-analyst?type=year&id='.date("Y").'&department_id='.current_user_position()->id) }}&solo=true">
@@ -373,9 +387,8 @@ color:white !important;
                         <span>احصائياتي السنوية</span>
                     </a>
                 </li>
-            @if (is_strategy())
-                
-            
+            @endif
+            @if (has_permission('strategy_employee_approval'))
             <li class="nav-item {{ request()->routeIs('subtask.strategyEmployeeApproval') ? 'bg-grain' : '' }}">
                 <a class="nav-link" href="{{ route('subtask.strategyEmployeeApproval') }}">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
@@ -390,6 +403,7 @@ color:white !important;
                 التحكم
             </div>
             
+            @if (has_permission('view_my_team'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->is('employeepositions/team/*') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ url('/employeepositions/team/'.current_user_position()->id )  }}">
@@ -397,7 +411,9 @@ color:white !important;
                         <span>فريقي</span></a>
                 </li>
             </li>
+            @endif
             
+            @if (has_permission('view_top_employees'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->is('employeepositionstop') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ url('/employeepositionstop') }}">
@@ -405,7 +421,9 @@ color:white !important;
                         <span>أعلى الموظفين أداء</span></a>
                 </li>
             </li>
+            @endif
             <!-- Nav Item - Pages Collapse Menu -->
+            @if (has_any_permission(['view_strategic_goals', 'view_strategic_indicators', 'view_initiatives', 'view_efficiency_indicators', 'view_main_tasks', 'view_subtasks']))
             <li class="nav-item">
                 <li class="nav-item {{
                     request()->is('hadafstrategies') ||
@@ -424,22 +442,34 @@ color:white !important;
                     <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                         <div class="bg-grain py-2 collapse-inner rounded">
                             <h6 class="collapse-header"></h6>
+                            @if (has_permission('view_strategic_goals'))
                             <a class="collapse-item" href="{{url('/hadafstrategies')}}" >الأهداف الإستراتيجية</a>
+                            @endif
                             
-                            @if (is_admin())
+                            @if (has_permission('view_strategic_indicators'))
                             <a class="collapse-item" href="{{url('/moasheradastrategy')}}" >المؤشرات الإستراتيجية</a>
+                            @endif
+                            @if (has_permission('view_initiatives'))
                             <a class="collapse-item" href="{{url('/mubadara')}}" >المبادرات</a>
+                            @endif
+                            @if (has_permission('view_efficiency_indicators'))
                             <a class="collapse-item" href="{{url('/moashermkmf')}}" >مؤشرات الكفاءة والفعالية</a>
+                            @endif
+                            @if (has_permission('view_main_tasks'))
                             <a class="collapse-item" href="{{url('/task')}}" >الإجراءات الرئيسية</a>
+                            @endif
+                            @if (has_permission('view_subtasks'))
                             <a class="collapse-item" href="{{url('/subtask')}}" >المهام الفرعية</a>
                             @endif
                         </div>
                     </div>
                 </li>
             </li>
+            @endif
          
 
             <!-- Nav Item - Utilities Collapse Menu -->
+            @if (has_any_permission(['assign_to_team', 'view_assignment_stats', 'approve_tasks', 'view_my_tasks']))
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
                     aria-expanded="true" aria-controls="collapseUtilities">
@@ -461,17 +491,27 @@ color:white !important;
                     data-parent="#accordionSidebar">
                     <div class="bg-grain py-2 collapse-inner rounded">
                         <h6 class="collapse-header"></h6>
+                        @if (has_permission('assign_to_team'))
                         <a class="collapse-item"  href="{{url('/settomyteam')}}" >إسناد لفريقي</a>
+                        @endif
+                        @if (has_permission('view_assignment_stats'))
                         <a class="collapse-item"  href="{{route('subtask.assignmentStats')}}" >إحصائيات الإسناد</a>
+                        @endif
+                        @if (has_permission('approve_tasks'))
                         <a class="collapse-item"  href="{{url('/subtaskapproval')}}" >الموافقة على المهام <span class="badge bg-red badgered" id="approval-tasks-badge">{{ $subtasksApprovalCount }}</span></a>
+                        @endif
+                        @if (has_permission('view_my_tasks'))
                         <a class="collapse-item"  href="{{url('/mysubtasks')}}" >مهامي <span class="badge bg-red badgered" id="my-tasks-badge">{{ $subtasksNewCount }}</span></a>
+                        @endif
                   
                     </div>
                 </div>
             </li>
+            @endif
 
 
             <!-- Nav Item - Utilities Collapse Menu -->
+            @if (has_any_permission(['view_tickets', 'create_tickets', 'manage_all_tickets']))
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTickets"
                     aria-expanded="true" aria-controls="collapseTickets">
@@ -481,9 +521,13 @@ color:white !important;
                 <div id="collapseTickets" class="collapse" aria-labelledby="headingTickets"
                     data-parent="#accordionSidebar">
                     <div class="bg-grain py-2 collapse-inner rounded">                        <h6 class="collapse-header">التذاكر:</h6>
+                        @if (has_permission('view_tickets'))
                         <a class="collapse-item"  href="{{url('/tickets')}}" >التذاكر</a>
+                        @endif
+                        @if (has_permission('create_tickets'))
                         <a class="collapse-item"  href="{{url('/tickets/create')}}" >أضف تذكرة جديدة</a>
-                        @if (in_array(current_user_position()->id, explode(',', env('STRATEGY_CONTROL_ID', ''))))
+                        @endif
+                        @if (has_permission('manage_all_tickets'))
                         <a class="collapse-item"  href="{{ route('tickets.admin.index') }}" >
                             <i class="fas fa-cog fa-sm"></i> إدارة جميع التذاكر
                         </a>
@@ -492,7 +536,9 @@ color:white !important;
                     </div>
                 </div>
             </li>
+            @endif
 
+            @if (has_permission('view_calendar'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->is('mysubtaskscalendar') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ url('/mysubtaskscalendar')  }}">
@@ -500,7 +546,9 @@ color:white !important;
                         <span>التقويم</span></a>
                 </li>
             </li>
+            @endif
 
+            @if (has_permission('change_password'))
             <li class="nav-item ">
                 <li class="nav-item {{ request()->routeIs('password.change') ? 'bg-grain' : '' }}">
                     <a class="nav-link" href="{{ route('password.change') }}">
@@ -508,6 +556,7 @@ color:white !important;
                         <span>تغيير كلمة المرور</span></a>
                 </li>
             </li>
+            @endif
 
             <!-- Divider -->
             <hr class="sidebar-divider">
@@ -1082,6 +1131,15 @@ $(document).ready(function() {
 
 <!-- Bootstrap Select JS (بعد jQuery و Bootstrap) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script>
+
+<!-- SweetAlert2 for better user feedback -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap4.min.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap4.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.6.0/dist/alpine.min.js" defer></script>
 
     @stack('scripts')
